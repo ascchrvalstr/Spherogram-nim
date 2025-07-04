@@ -1,6 +1,8 @@
 import std/sequtils
 import std/enumerate
 
+import manu
+
 import links
 
 proc linking_matrix*[T](link: Link[T]): seq[seq[int]] =
@@ -34,3 +36,19 @@ proc colorability_matrix*[T](link: Link[T]): seq[seq[int]] =
             else:
                 m[c][ind] -= 1
     return m
+
+proc determinant*[T](link: Link[T], method0: string = "goeritz"): int =
+    # "method" is a reserved keyword in Nim, so the parameter has to be renamed to "method0"
+    if method0 == "color":
+        let M = link.colorability_matrix()
+        let size = link.crossings.len-1
+        var N = newSeqWith(size, newSeq[float64](size))
+        for i in 0 ..< size:
+            for j in 0 ..< size:
+                N[i][j] = float64(M[i+1][j+1])
+        echo matrix(N).det()
+        # note that float to int conversion in Nim is similar to C++ in that the number is rounded towards zero, so we need to add 0.5 and then convert to int
+        return int(abs(matrix(N).det()) + 0.5)
+    if method0 == "goeritz":
+        raise newException(AssertionDefect, "Not implemented")
+    raise newException(AssertionDefect, "Not implemented")

@@ -18,3 +18,11 @@ test "colorability_matrix":
     check hopf_positive.colorability_matrix() == @[@[-2, 2], @[2, -2]]
     let hopf_negative = link_from_PD_code(@[[0, 2, 1, 3], [3, 1, 2, 0]])
     check hopf_negative.colorability_matrix() == @[@[-2, 2], @[2, -2]]
+
+test "determinant":
+    let trefoil = link_from_PD_code(@[[5, 2, 0, 3], [3, 0, 4, 1], [1, 4, 2, 5]])
+    check trefoil.determinant("color") == 3
+    let hopf_positive = link_from_PD_code(@[[2, 1, 3, 0], [1, 2, 0, 3]])
+    check hopf_positive.determinant("color") == 2
+    let figure_eight = link_from_PD_code(@[[7, 4, 0, 5], [3, 0, 4, 1], [1, 7, 2, 6], [5, 3, 6, 2]])
+    check figure_eight.determinant("color") == 5
