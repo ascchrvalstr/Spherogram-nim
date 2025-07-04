@@ -23,3 +23,14 @@ proc linking_matrix*[T](link: Link[T]): seq[seq[int]] =
         for j in 0 ..< num_components:
             linking_matrix[i][j] = linking_matrix[i][j] div 2
     return linking_matrix
+
+proc colorability_matrix*[T](link: Link[T]): seq[seq[int]] =
+    let edges = link.pieces()
+    var m = newSeqWith(link.crossings.len, newSeq[int](edges.len))
+    for (ind, s) in enumerate(edges):
+        for (c, i) in s:
+            if i mod 2 == 1:
+                m[c][ind] += 1
+            else:
+                m[c][ind] -= 1
+    return m
