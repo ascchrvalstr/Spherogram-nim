@@ -433,3 +433,50 @@ proc deconnect_sum*[T](link0: Link[T]): seq[Link[T]] =
                     link.crossings[next_c][next_s] = prev_c*4 + prev_s
                 # echo link.crossings
     return link.split_link_diagram()
+
+proc over_or_under_arcs*[T](link: Link[T], over: bool): seq[seq[(int, int)]] =
+    let num_crossings = link.crossings.len
+    var first_traversal_entry_points = newSeq[(int, int)]()
+    var second_traversal_entry_points = newSeq[(int, int)]()
+    for c in 0 ..< num_crossings:
+        if link.signs[c] == 0:
+            first_traversal_entry_points.add((c, 0))
+        first_traversal_entry_points.add((c, 2))
+        if link.signs[c] != -1:
+            second_traversal_entry_points.add((c, 1))
+        if link.signs[c] != 1:
+            second_traversal_entry_points.add((c, 3))
+    if not over:
+        swap(first_traversal_entry_points, second_traversal_entry_points)
+    # whether each strand has been visited
+    var visited = newSeq[array[0..3, bool]](num_crossings)
+    var arcs = newSeq[seq[(int, int)]]()
+    for (start_c, start_s) in first_traversal_entry_points:
+        if not visited[start_c][start_s]:
+            var cur_arc = newSeq[(int, int)]()
+            var (cur_c, cur_s) = (start_c, start_s)
+            while true:
+                cur_arc.add((cur_c, cur_s))
+                visited[cur_c][cur_s] = true
+                let (op_c, op_s) = link.opposite_strand((cur_c, cur_s))
+                visited[op_c][op_s] = true
+                (cur_c, cur_s) = link.next_strand((cur_c, cur_s))
+                if cur_s mod 2 == (if over: 0 else: 1):
+                    break
+            arcs.add(cur_arc)
+    # cyclic arcs that lie totally above (for over) or totally below (for under) the rest of the diagram
+    for (start_c, start_s) in second_traversal_entry_points:
+        if not visited[start_c][start_s]:
+            var cur_arc = newSeq[(int, int)]()
+            var (cur_c, cur_s) = (start_c, start_s)
+            while true:
+                cur_arc.add((cur_c, cur_s))
+                visited[cur_c][cur_s] = true
+                let (op_c, op_s) = link.opposite_strand((cur_c, cur_s))
+                visited[op_c][op_s] = true
+                (cur_c, cur_s) = link.next_strand((cur_c, cur_s))
+                if (cur_c, cur_s) == (start_c, start_s):
+                    break
+            cur_arc.add((start_c, start_s))
+            arcs.add(cur_arc)
+    return arcs

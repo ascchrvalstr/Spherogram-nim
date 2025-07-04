@@ -222,3 +222,15 @@ test "deconnect_sum":
     check result[1].crossings == [[1, 0, 3, 2]]
     check result[1].signs == [1]
     check result[1].link_components == [newLinkComponent[int](0, 2)]
+
+test "over_or_under_arcs":
+    let trefoil = link_from_PD_code(@[[5, 2, 0, 3], [3, 0, 4, 1], [1, 4, 2, 5]])
+    check over_or_under_arcs(trefoil, true) == @[@[(0, 2), (1, 3)], @[(1, 2), (2, 3)], @[(2, 2), (0, 3)]]
+    check over_or_under_arcs(trefoil, false) == @[@[(0, 3), (1, 2)], @[(1, 3), (2, 2)], @[(2, 3), (0, 2)]]
+    # unlinked_hopf has cyclic components lying entirely above/below the rest of the diagram
+    let unlinked_hopf = link_from_PD_code(@[[1, 3, 0, 2], [0, 3, 1, 2]], @[1, -1])
+    check over_or_under_arcs(unlinked_hopf, true) == @[@[(0, 2)], @[(1, 2)], @[(0, 1), (1, 3), (0, 1)]]
+    check over_or_under_arcs(unlinked_hopf, false) == @[@[(0, 1)], @[(1, 3)], @[(0, 2), (1, 2), (0, 2)]]
+    let unoriented_trefoil = link_from_PD_code(@[[5, 2, 0, 3], [3, 0, 4, 1], [1, 4, 2, 5]], @[0, 0, 0])
+    check over_or_under_arcs(unoriented_trefoil, true) == @[@[(0, 0), (2, 1)], @[(0, 2), (1, 3)], @[(1, 0), (0, 1)]]
+    check over_or_under_arcs(unoriented_trefoil, false) == @[@[(0, 1), (2, 0)], @[(0, 3), (1, 2)], @[(1, 1), (0, 0)]]
