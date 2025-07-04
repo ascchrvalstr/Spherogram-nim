@@ -1,3 +1,8 @@
 nimcache/
 nimblecache/
 htmldocs/
+test/scratchpad*
+test/test_invariants
+test/test_links
+test/test_simplify
+test/test_torus
