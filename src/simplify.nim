@@ -494,14 +494,7 @@ proc randomize_within_lengths*[T](items: seq[seq[T]]): seq[seq[T]] =
             ans.add(item_by_len)
     return ans
 
-proc pickup_arc*[T](link: Link[T], over: bool, arc: seq[(int, int)]): (seq[int], seq[int]) =
-    if arc.len == 0:
-        raise newException(ValueError, "arc is empty")
-    for i in 1 ..< arc.len:
-        if arc[i][1] mod 2 != (if over: 1 else: 0):
-            raise newException(ValueError, &"over={over}, but arc[{i}][1] == {arc[i][1]} is inconsistent with over, where arc={arc}")
-        if link.next_strand(arc[i-1]) != arc[i]:
-            raise newException(ValueError, &"next strand of {arc[i-1]} is not {arc[i]}")
+proc pickup_arc_internal*[T](link: Link[T], over: bool, arc: seq[(int, int)]): (seq[int], seq[int]) =
     var arc_is_cycle = arc.len > 1 and arc[0] == arc[arc.len-1]
     # echo arc_is_cycle
     # map from crossing to its position in arc
@@ -688,16 +681,103 @@ proc pickup_arc*[T](link: Link[T], over: bool, arc: seq[(int, int)]): (seq[int],
     # echo link.signs
     return (elim, new_crossings)
 
+proc pickup_arc*[T](link: Link[T], over: bool, arc: seq[(int, int)]): int =
+    if arc.len == 0:
+        raise newException(ValueError, "arc is empty")
+    for i in 1 ..< arc.len:
+        if arc[i][1] mod 2 != (if over: 1 else: 0):
+            raise newException(ValueError, &"over={over}, but arc[{i}][1] == {arc[i][1]} is inconsistent with over, where arc={arc}")
+        if link.next_strand(arc[i-1]) != arc[i]:
+            raise newException(ValueError, &"next strand of {arc[i-1]} is not {arc[i]}")
+    let init_num_crossings = link.crossings.len
+    var (right_endpoint, _) = link.opposite_strand(arc[arc.len-1])
+    var left_cycle_index = -1
+    var right_cycle_index = -1
+    for i in 1 ..< arc.len:
+        if arc[i][0] == arc[0][0]:
+            left_cycle_index = i
+        if arc[i][0] == right_endpoint:
+            right_cycle_index = i
+    # echo left_cycle_index
+    # echo right_cycle_index
+    if right_cycle_index != -1:
+        var (elim, changed) = pickup_arc_internal(link, over, arc[right_cycle_index ..< arc.len])
+        # echo elim
+        assert changed == []
+        var (cur_c, cur_s) = arc[right_cycle_index]
+        var num_crossings = init_num_crossings
+        for (i, elim_c) in enumerate(elim):
+            for j in i+1 ..< elim.len:
+                update_crossing(elim[j], num_crossings, elim_c)
+            update_crossing(cur_c, num_crossings, elim_c)
+            num_crossings -= 1
+        # echo cur_c
+        # echo cur_s
+        var reidemeister_i_crossing = cur_c
+        var new_arc = newSeq[(int, int)](right_cycle_index)
+        for i in countdown(right_cycle_index-1, 0):
+            (cur_c, cur_s) = link.previous_strand((cur_c, cur_s))
+            new_arc[i] = (cur_c, cur_s)
+        # echo new_arc
+        (elim, changed) = reidemeister_i(link, reidemeister_i_crossing)
+        assert elim == [reidemeister_i_crossing]
+        for i in 1 ..< new_arc.len:
+            update_crossing(new_arc[i][0], num_crossings, reidemeister_i_crossing)
+        if new_arc[0][0] == reidemeister_i_crossing:
+            if right_cycle_index > 1:
+                new_arc[0] = link.previous_strand(new_arc[1])
+            else:
+                return init_num_crossings - link.crossings.len
+        else:
+            update_crossing(new_arc[0][0], num_crossings, reidemeister_i_crossing)
+        # echo new_arc
+        num_crossings -= 1
+        discard pickup_arc(link, over, new_arc)
+        return init_num_crossings - link.crossings.len
+    if left_cycle_index != -1:
+        var (elim, changed) = pickup_arc_internal(link, over, arc[0 ..< left_cycle_index])
+        # echo elim
+        assert changed == []
+        var (cur_c, cur_s) = arc[left_cycle_index]
+        var num_crossings = init_num_crossings
+        for (i, elim_c) in enumerate(elim):
+            for j in i+1 ..< elim.len:
+                update_crossing(elim[j], num_crossings, elim_c)
+            update_crossing(cur_c, num_crossings, elim_c)
+            num_crossings -= 1
+        # echo cur_c
+        # echo cur_s
+        var reidemeister_i_crossing = cur_c
+        var new_arc = newSeq[(int, int)]()
+        for i in left_cycle_index ..< arc.len:
+            new_arc.add((cur_c, cur_s))
+            (cur_c, cur_s) = link.next_strand((cur_c, cur_s))
+        # echo new_arc
+        (elim, changed) = reidemeister_i(link, reidemeister_i_crossing)
+        assert elim == [reidemeister_i_crossing]
+        for i in 1 ..< new_arc.len:
+            update_crossing(new_arc[i][0], num_crossings, reidemeister_i_crossing)
+        num_crossings -= 1
+        if new_arc.len > 1:
+            new_arc[0] = link.previous_strand(new_arc[1])
+        else:
+            return init_num_crossings - link.crossings.len
+        # echo new_arc
+        discard pickup_arc(link, over, new_arc)
+        return init_num_crossings - link.crossings.len
+    discard pickup_arc_internal(link, over, arc)
+    return init_num_crossings - link.crossings.len
+
 proc pickup_arcs*[T](link: Link[T], over: bool): int =
     var link_copy = link.copy()
     var arcs = over_or_under_arcs(link, over)
     for arc in randomize_within_lengths(arcs):
         if len(arc) == 1:
             break
-        let (elim, new_cross) = pickup_arc(link, over, arc)
-        if elim.len > new_cross.len:
-            return elim.len - new_cross.len
-        assert elim.len == new_cross.len
+        let crossings_removed = pickup_arc(link, over, arc)
+        if crossings_removed > 0:
+            return crossings_removed
+        assert crossings_removed == 0
         (link.crossings, link.signs, link.unlinked_unknot_components, link.link_components) = (link_copy.crossings, link_copy.signs, link_copy.unlinked_unknot_components, link_copy.link_components)
     return 0
 

@@ -239,9 +239,9 @@ test "randomize_within_lengths":
     var item = @[@[2], @[1, 3]]
     check randomize_within_lengths(item) == @[@[1, 3], @[2]]
 
-test "pickup_arc":
+test "pickup_arc_internal":
     var unlinked_hopf = link_from_PD_code(@[[1, 3, 0, 2], [0, 3, 1, 2]], @[1, -1])
-    check pickup_arc(unlinked_hopf, true, @[(0, 1), (1, 3), (0, 1)]) == (@[1, 0], @[])
+    check pickup_arc_internal(unlinked_hopf, true, @[(0, 1), (1, 3), (0, 1)]) == (@[1, 0], @[])
     # check arc_is_cycle
     # check cross_pos = {1: 0, 0: 1}
     # check num_middle_crossings == 2
@@ -262,7 +262,7 @@ test "pickup_arc":
     check unlinked_hopf.link_components == []
 
     unlinked_hopf = link_from_PD_code(@[[1, 3, 0, 2], [0, 5, 1, 2], [3, 4, 4, 5]])
-    check pickup_arc(unlinked_hopf, false, @[(1, 2), (0, 2), (1, 2)]) == (@[0, 1], @[])
+    check pickup_arc_internal(unlinked_hopf, false, @[(1, 2), (0, 2), (1, 2)]) == (@[0, 1], @[])
     # check arc_is_cycle
     # check link.link_components == @[(2, 3), (0, 2)]
     # check remove_comps == @[false, true]
@@ -273,7 +273,7 @@ test "pickup_arc":
     check unlinked_hopf.link_components == [newLinkComponent[int](0, 3)]
 
     unlinked_hopf = link_from_PD_code(@[[0, 4, 1, 5], [3, 4, 0, 5], [1, 3, 2, 2]], @[-1, 1, 1])
-    check pickup_arc(unlinked_hopf, false, @[(2, 0), (0, 0), (1, 0)]) == (@[0, 1], @[])
+    check pickup_arc_internal(unlinked_hopf, false, @[(2, 0), (0, 0), (1, 0)]) == (@[0, 1], @[])
     # check not arc_is_cycle
     # check link.link_components == @[(2, 1), (0, 3)]
     # check remove_comps == @[false, true]
@@ -284,7 +284,7 @@ test "pickup_arc":
     check unlinked_hopf.link_components == [newLinkComponent[int](0, 1)]
 
     let trefoil_4cross = link_from_PD_code(@[[7, 4, 0, 5], [3, 0, 4, 1], [6, 1, 7, 2], [2, 5, 3, 6]])
-    check pickup_arc(trefoil_4cross, true, @[(3, 0), (2, 1), (1, 1)]) == (@[2, 1], @[2])
+    check pickup_arc_internal(trefoil_4cross, true, @[(3, 0), (2, 1), (1, 1)]) == (@[2, 1], @[2])
     # check not arc_is_cycle
     # check cross_pos == {2: 0, 1: 1}
     # check num_middle_crossings == 2
@@ -307,6 +307,19 @@ test "pickup_arc":
     check trefoil_4cross.signs == [-1, -1, -1]
     check trefoil_4cross.unlinked_unknot_components == 0
     check trefoil_4cross.link_components == [newLinkComponent[int](0, 2)]
+
+test "pickup_arc":
+    let one_vertex_unknot = link_from_PD_code(@[[0, 1, 1, 0]])
+    check pickup_arc(one_vertex_unknot, false, @[(0, 3), (0, 2)]) == 1
+    # check left_cycle_index == 1
+    # check right_cycle_index == 1
+    # check elim == @[]
+    # check (cur_c, cur_s) == (0, 2)
+    # check new_arc == @[(0, 3)] 
+    check one_vertex_unknot.crossings == []
+    check one_vertex_unknot.signs == []
+    check one_vertex_unknot.unlinked_unknot_components == 1
+    check one_vertex_unknot.link_components == []
 
 test "pickup_simplify":
     # 13n3370, with one crossing change via band attachment, with another band attached (and thus the diagram of an unknot)
