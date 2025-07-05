@@ -707,3 +707,38 @@ proc pickup_arcs*[T](link: Link[T], over: bool): int =
         assert elim.len == new_cross.len
         (link.crossings, link.signs, link.unlinked_unknot_components, link.link_components) = (link_copy.crossings, link_copy.signs, link_copy.unlinked_unknot_components, link_copy.link_components)
     return 0
+
+proc pickup_simplify*[T](link: Link[T], type_III: int = 0): int =
+    discard """
+    Optimizes the overcrossings on a diagram, then the undercrossings,
+    simplifying in between until the process stabilizes.
+    """
+    # echo link
+    let init_num_crossings = link.crossings.len
+    if type_III > 0:
+        discard simplify_via_level_type_iii(link, type_III)
+    else:
+        discard basic_simplify(link)
+    # echo link
+    var stabilized = init_num_crossings == 0
+
+    while not stabilized:
+        let old_cross = link.crossings.len
+        discard pickup_arcs(link, true)
+        # echo link
+        if type_III > 0:
+            discard simplify_via_level_type_iii(link, type_III)
+            # echo link
+        
+        discard pickup_arcs(link, false)
+        # echo link
+        if type_III > 0:
+            discard simplify_via_level_type_iii(link, type_III)
+            # echo link
+        
+        let new_cross = link.crossings.len
+        stabilized = new_cross == 0 or new_cross == old_cross
+    
+    # TODO: connect sum with twists
+
+    return init_num_crossings - link.crossings.len
