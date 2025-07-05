@@ -486,6 +486,20 @@ proc over_or_under_arcs*[T](link: Link[T], over: bool): seq[seq[(int, int)]] =
             arcs.add(cur_arc)
     return arcs
 
+proc randomize_within_lengths*[T](items: seq[seq[T]]): seq[seq[T]] =
+    var max_length = -1
+    for item in items:
+        max_length = max(max_length, item.len)
+    var by_lens = newSeq[seq[seq[T]]](max_length+1)
+    for item in items:
+        by_lens[item.len].add(item)
+    var ans = newSeq[seq[T]]()
+    for length in countdown(max_length, 0):
+        by_lens[length].shuffle()
+        for item_by_len in by_lens[length]:
+            ans.add(item_by_len)
+    return ans
+
 proc pickup_arc*[T](link: Link[T], over: bool, arc: seq[(int, int)]): (seq[int], seq[int]) =
     if arc.len == 0:
         raise newException(ValueError, "arc is empty")

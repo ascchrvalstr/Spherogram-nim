@@ -235,6 +235,10 @@ test "over_or_under_arcs":
     check over_or_under_arcs(unoriented_trefoil, true) == @[@[(0, 0), (2, 1)], @[(0, 2), (1, 3)], @[(1, 0), (0, 1)]]
     check over_or_under_arcs(unoriented_trefoil, false) == @[@[(0, 1), (2, 0)], @[(0, 3), (1, 2)], @[(1, 1), (0, 0)]]
 
+test "randomize_within_lengths":
+    var item = @[@[2], @[1, 3]]
+    check randomize_within_lengths(item) == @[@[1, 3], @[2]]
+
 test "pickup_arc":
     var unlinked_hopf = link_from_PD_code(@[[1, 3, 0, 2], [0, 3, 1, 2]], @[1, -1])
     check pickup_arc(unlinked_hopf, true, @[(0, 1), (1, 3), (0, 1)]) == (@[1, 0], @[])
