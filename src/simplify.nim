@@ -360,13 +360,6 @@ proc simplify_via_level_type_iii*[T](link: Link[T], max_consecutive_failures: in
             failures += 1
     return total_removed
 
-proc simplify*[T](link: Link[T], mode: string = "basic", type_III_limit: int = 100): int =
-    if mode == "basic":
-        return basic_simplify(link)
-    if mode == "level":
-        return simplify_via_level_type_iii(link, type_III_limit)
-    raise newException(AssertionDefect, "Not implemented")
-
 type DualGraphOfFaces* = seq[seq[(int, (int, int))]]
 
 proc dual_graph*[T](link: Link[T]): DualGraphOfFaces =
@@ -742,3 +735,14 @@ proc pickup_simplify*[T](link: Link[T], type_III: int = 0): int =
     # TODO: connect sum with twists
 
     return init_num_crossings - link.crossings.len
+
+proc simplify*[T](link: Link[T], mode: string = "basic", type_III_limit: int = 100): int =
+    if mode == "basic":
+        return basic_simplify(link)
+    if mode == "level":
+        return simplify_via_level_type_iii(link, type_III_limit)
+    if mode == "pickup":
+        return pickup_simplify(link)
+    if mode == "global":
+        return pickup_simplify(link, type_III_limit)
+    raise newException(ValueError, &"mode={mode} is not among \"basic\", \"level\", \"pickup\" and \"global\"")
