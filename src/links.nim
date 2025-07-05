@@ -540,3 +540,8 @@ proc pieces*[T](link: Link[T]): seq[seq[(int, int)]] =
                     break
             over_arcs.add(cur_arc)
     return over_arcs
+
+proc strand_sign*[T](link: Link[T], c: int, s: int): int =
+    if link.signs[c] == 0:
+        return 0
+    return [-1, link.signs[c], 1, -link.signs[c]][s]

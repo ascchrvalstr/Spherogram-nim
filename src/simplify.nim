@@ -3,6 +3,8 @@ import std/sequtils
 import std/random
 import std/enumerate
 import std/tables
+import std/deques
+import std/algorithm
 
 import links
 
@@ -19,6 +21,9 @@ proc remove_crossing*[T](link: Link[T], cross: int): void =
         # only update opposites and link_components if the last crossing is not similarly marked for deletion
         if link.crossings[cross][0] != -1:
             for s in 0 ..< 4:
+                # if the specific crossing strand has opposite -2, this means that this strand is loose (i.e. not tied to an opposite strand)
+                if link.crossings[cross][s] == -2:
+                    continue
                 var (op_c, op_s) = link.opposite_strand((cross, s))
                 if op_c == num_crossings-1:
                     op_c = cross
@@ -480,3 +485,192 @@ proc over_or_under_arcs*[T](link: Link[T], over: bool): seq[seq[(int, int)]] =
             cur_arc.add((start_c, start_s))
             arcs.add(cur_arc)
     return arcs
+
+proc pickup_arc*[T](link: Link[T], over: bool, arc: seq[(int, int)]): (seq[int], seq[int]) =
+    if arc.len == 0:
+        raise newException(ValueError, "arc is empty")
+    var arc_is_cycle = arc.len > 1 and arc[0] == arc[arc.len-1]
+    # echo arc_is_cycle
+    # map from crossing to its position in arc
+    var cross_to_pos = initTable[int, int]()
+    for i in 1 ..< arc.len:
+        cross_to_pos[arc[i][0]] = i-1
+    # echo cross_to_pos
+    # the number of crossings in the middle of the arc
+    let num_middle_crossings = arc.len-1
+    # echo num_middle_crossings
+    var remove_comps = newSeq[bool](link.link_components.len)
+    # update the link components whose crossing is among the to-be-removed crossings
+    for (comp_index, comp) in enumerate(link.link_components):
+        if comp.crossing in cross_to_pos:
+            let (start_s, start_c) = (comp.crossing, comp.strand_index)
+            var (cur_s, cur_c) = (start_s, start_c)
+            while cur_s in cross_to_pos:
+                (cur_s, cur_c) = link.previous_strand((cur_s, cur_c))
+                if (cur_s, cur_c) == (start_s, start_c):
+                    # we have encountered a cycle
+                    break
+            if (cur_s, cur_c) == (start_s, start_c):
+                remove_comps[comp_index] = true
+                link.unlinked_unknot_components += 1
+            else:
+                (link.link_components[comp_index].crossing, link.link_components[comp_index].strand_index) = (cur_s, cur_c)
+    # echo link.link_components
+    # echo remove_comps
+    link.link_components = collect:
+        for (remove_comp, comp) in zip(remove_comps, link.link_components):
+            if not remove_comp:
+                comp
+    # echo link.link_components
+    var elim = newSeq[int]()
+    for i in 1 ..< arc.len:
+        elim.add(arc[i][0])
+    # echo elim
+    # whether each middle crossing has been visited
+    var crossing_visited = newSeq[bool](num_middle_crossings)
+    # glue together the opposites of the other two strands of the crossings crossed by our arc, traversing along the link if necessary
+    for (elim_index, elim_c) in enumerate(elim):
+        if not crossing_visited[elim_index]:
+            var (crossed_c, crossed_s) = link.opposite_strand(arc[elim_index])
+            crossed_s = (crossed_s+3) mod 4
+            # echo crossed_c
+            # echo crossed_s
+            var (start_c, start_s) = (crossed_c, crossed_s)
+            while start_c in cross_to_pos:
+                crossing_visited[cross_to_pos[start_c]] = true
+                (start_c, start_s) = link.previous_strand((start_c, start_s))
+                if (start_c, start_s) == (crossed_c, crossed_s):
+                    break
+            # echo start_c
+            # echo start_s
+            if (start_c, start_s) == (crossed_c, crossed_s):
+                continue
+            # glue the two uninvolved strands together
+            var (end_c, end_s) = (crossed_c, crossed_s)
+            while end_c in cross_to_pos:
+                crossing_visited[cross_to_pos[end_c]] = true
+                (end_c, end_s) = link.next_strand((end_c, end_s))
+            end_s = (end_s+2) mod 4
+            # echo end_c
+            # echo end_s
+            link.crossings[start_c][start_s] = end_c*4 + end_s
+            link.crossings[end_c][end_s] = start_c*4 + start_s
+    # echo link.crossings
+    # remove the middle crossings
+    var elim_updated = elim
+    var (incoming_c, incoming_s) = arc[0]
+    var (outgoing_c, outgoing_s) = link.opposite_strand(arc[arc.len-1])
+    # echo incoming_c
+    # echo incoming_s
+    # echo outgoing_c
+    # echo outgoing_s
+    if not arc_is_cycle:
+        link.crossings[incoming_c][incoming_s] = -2
+        link.crossings[outgoing_c][outgoing_s] = -2
+    for elim_c in elim:
+        link.crossings[elim_c][0] = -1
+    for i in 0 ..< num_middle_crossings:
+        for j in i+1 ..< num_middle_crossings:
+            update_crossing(elim_updated[j], link.crossings.len, elim_updated[i])
+        if not arc_is_cycle:
+            update_crossing(incoming_c, link.crossings.len, elim_updated[i])
+            update_crossing(outgoing_c, link.crossings.len, elim_updated[i])
+        remove_crossing(link, elim_updated[i])
+    # echo elim_updated
+    # echo link.crossings
+    if arc_is_cycle:
+        return (elim, @[])
+    # build the dual graph, ignoring the incoming and outgoing strands of the given arc
+    var temp_faces = newSeq[seq[(int, int)]]()
+    var start_face = -1
+    var end_face = -1
+    var strand_to_face = newSeqWith(link.crossings.len, [-1, -1, -1, -1])
+    for c in 0 ..< link.crossings.len:
+        for s in 0 ..< 4:
+            if (c, s) notin [(incoming_c, incoming_s), (outgoing_c, outgoing_s)] and strand_to_face[c][s] == -1:
+                var temp_face = newSeq[(int, int)]()
+                let start_strand = newCrossingStrand(link, c, s)
+                var cur_strand = start_strand
+                while strand_to_face[cur_strand.crossing][cur_strand.strand_index] == -1:
+                    strand_to_face[cur_strand.crossing][cur_strand.strand_index] = temp_faces.len
+                    temp_face.add((cur_strand.crossing, cur_strand.strand_index))
+                    cur_strand = cur_strand.next_corner()
+                    while (cur_strand.crossing, cur_strand.strand_index) in [(incoming_c, incoming_s), (outgoing_c, outgoing_s)]:
+                        if cur_strand.crossing == incoming_c and cur_strand.strand_index == incoming_s mod 4:
+                            start_face = temp_faces.len
+                        if cur_strand.crossing == outgoing_c and cur_strand.strand_index == outgoing_s mod 4:
+                            end_face = temp_faces.len
+                        cur_strand.strand_index = (cur_strand.strand_index+3) mod 4
+                temp_faces.add(temp_face)
+    assert start_face != -1 and end_face != -1
+    # echo temp_faces
+    var temp_dual_graph = newSeq[seq[(int, (int, int))]](temp_faces.len)
+    for (face_index, face) in enumerate(temp_faces):
+        for (interface_c, interface_s) in face:
+            let (op_c, op_s) = link.opposite_strand((interface_c, interface_s))
+            temp_dual_graph[face_index].add((strand_to_face[op_c][op_s], (interface_c, interface_s)))
+    # echo temp_dual_graph
+    # use BFS to find a shortest path from start_face to end_face
+    var distances = newSeqWith(temp_faces.len, -1)
+    var previous_face = newSeq[int](temp_faces.len)
+    var last_interface_edge = newSeq[(int, int)](temp_faces.len)
+    distances[start_face] = 0
+    var bfs_queue = toDeque([start_face])
+    while bfs_queue.len > 0:
+        let cur_face = bfs_queue.popFirst()
+        for (next_face, interface_edge) in temp_dual_graph[cur_face]:
+            if distances[next_face] == -1:
+                distances[next_face] = distances[cur_face] + 1
+                previous_face[next_face] = cur_face
+                last_interface_edge[next_face] = interface_edge
+                bfs_queue.addLast(next_face)
+    # echo distances
+    # echo previous_face
+    # echo last_interface_edge
+    var shortest_path_edges = newSeq[(int, int)]()
+    var cur_face = end_face
+    while cur_face != start_face:
+        shortest_path_edges.add(last_interface_edge[cur_face])
+        cur_face = previous_face[cur_face]
+    shortest_path_edges.reverse()
+    # echo shortest_path_edges
+    # add the new intersections of the arc with the underlying diagram
+    var (cur_c, cur_s) = (incoming_c, incoming_s)
+    let incoming_strand_sign = link.strand_sign(incoming_c, incoming_s)
+    var new_crossings = newSeq[int]()
+    for (edge_c, edge_s) in shortest_path_edges:
+        # the index of the opposite of strand (cur_c, cur_s)
+        var last_strand_index = -1
+        var new_cross_sign = -2
+        var interface_edge_sign = link.strand_sign(edge_c, edge_s)
+        if over:
+            if interface_edge_sign == -1:
+                last_strand_index = 1
+                new_cross_sign = -incoming_strand_sign
+            else:
+                last_strand_index = 3
+                new_cross_sign = incoming_strand_sign
+        else:
+            if incoming_strand_sign == -1:
+                last_strand_index = 2
+                new_cross_sign = interface_edge_sign
+            else:
+                last_strand_index = 0
+                new_cross_sign = -interface_edge_sign
+        let (op_c, op_s) = link.opposite_strand((edge_c, edge_s))
+        link.crossings[cur_c][cur_s] = link.crossings.len*4 + last_strand_index
+        link.crossings[edge_c][edge_s] = link.crossings.len*4 + (last_strand_index+1) mod 4
+        link.crossings[op_c][op_s] = link.crossings.len*4 + (last_strand_index+3) mod 4
+        var new_crossing = [-1, -1, -1, -1]
+        new_crossing[last_strand_index] = cur_c*4 + cur_s
+        new_crossing[(last_strand_index+1) mod 4] = edge_c*4 + edge_s
+        new_crossing[(last_strand_index+3) mod 4] = op_c*4 + op_s
+        (cur_c, cur_s) = (link.crossings.len, (last_strand_index+2) mod 4)
+        new_crossings.add(link.crossings.len)
+        link.crossings.add(new_crossing)
+        link.signs.add(new_cross_sign)
+    link.crossings[cur_c][cur_s] = outgoing_c*4 + outgoing_s
+    link.crossings[outgoing_c][outgoing_s] = cur_c*4 + cur_s
+    # echo link.crossings
+    # echo link.signs
+    return (elim, new_crossings)

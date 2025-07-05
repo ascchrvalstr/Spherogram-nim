@@ -234,3 +234,72 @@ test "over_or_under_arcs":
     let unoriented_trefoil = link_from_PD_code(@[[5, 2, 0, 3], [3, 0, 4, 1], [1, 4, 2, 5]], @[0, 0, 0])
     check over_or_under_arcs(unoriented_trefoil, true) == @[@[(0, 0), (2, 1)], @[(0, 2), (1, 3)], @[(1, 0), (0, 1)]]
     check over_or_under_arcs(unoriented_trefoil, false) == @[@[(0, 1), (2, 0)], @[(0, 3), (1, 2)], @[(1, 1), (0, 0)]]
+
+test "pickup_arc":
+    var unlinked_hopf = link_from_PD_code(@[[1, 3, 0, 2], [0, 3, 1, 2]], @[1, -1])
+    check pickup_arc(unlinked_hopf, true, @[(0, 1), (1, 3), (0, 1)]) == (@[1, 0], @[])
+    # check arc_is_cycle
+    # check cross_pos = {1: 0, 0: 1}
+    # check num_middle_crossings == 2
+    # check link.link_components == @[(0, 1), (0, 2)]
+    # check remove_comps == @[true, true]
+    # check link.link_components == @[]
+    # check elim == @[1, 0]
+    # check (crossed_c, crossed_s) == (1, 0)
+    # check (start_c, start_s) == (1, 0)
+    # check link.crossings == @[[6, 5, 4, 7], [2, 1, 0, 3]]
+    # check (incoming_c, incoming_s) == (0, 1)
+    # check (outgoing_c, outgoing_s) == (1, 1)
+    # check elim_updated == @[1, 0]
+    # check link.crossings == @[]
+    check unlinked_hopf.crossings == []
+    check unlinked_hopf.signs == []
+    check unlinked_hopf.unlinked_unknot_components == 2
+    check unlinked_hopf.link_components == []
+
+    unlinked_hopf = link_from_PD_code(@[[1, 3, 0, 2], [0, 5, 1, 2], [3, 4, 4, 5]])
+    check pickup_arc(unlinked_hopf, false, @[(1, 2), (0, 2), (1, 2)]) == (@[0, 1], @[])
+    # check arc_is_cycle
+    # check link.link_components == @[(2, 3), (0, 2)]
+    # check remove_comps == @[false, true]
+    # check link.link_components == @[(2, 3)]
+    check unlinked_hopf.crossings == [[3, 2, 1, 0]]
+    check unlinked_hopf.signs == [-1]
+    check unlinked_hopf.unlinked_unknot_components == 1
+    check unlinked_hopf.link_components == [newLinkComponent[int](0, 3)]
+
+    unlinked_hopf = link_from_PD_code(@[[0, 4, 1, 5], [3, 4, 0, 5], [1, 3, 2, 2]], @[-1, 1, 1])
+    check pickup_arc(unlinked_hopf, false, @[(2, 0), (0, 0), (1, 0)]) == (@[0, 1], @[])
+    # check not arc_is_cycle
+    # check link.link_components == @[(2, 1), (0, 3)]
+    # check remove_comps == @[false, true]
+    # check link.link_components == @[(2, 1)]
+    check unlinked_hopf.crossings == [[1, 0, 3, 2]]
+    check unlinked_hopf.signs == [1]
+    check unlinked_hopf.unlinked_unknot_components == 1
+    check unlinked_hopf.link_components == [newLinkComponent[int](0, 1)]
+
+    let trefoil_4cross = link_from_PD_code(@[[7, 4, 0, 5], [3, 0, 4, 1], [6, 1, 7, 2], [2, 5, 3, 6]])
+    check pickup_arc(trefoil_4cross, true, @[(3, 0), (2, 1), (1, 1)]) == (@[2, 1], @[2])
+    # check not arc_is_cycle
+    # check cross_pos == {2: 0, 1: 1}
+    # check num_middle_crossings == 2
+    # check elim == @[2, 1]
+    # check (crossed_c, crossed_s) == (2, 2)
+    # check (start_c, start_s) == (3, 3)
+    # check (end_c, end_s) = (0, 0)
+    # check (crossed_c, crossed_s) = (1, 2)
+    # check (start_c, start_s) == (3, 2)
+    # check (end_c, end_s) = (0, 1)
+    # check link.crossings == @[[15, 14, 5, 13], [14, 2, 1, 9], [15, 7, 0, 12], [11, 3, 1, 0]]
+    # check link.crossings == @[[7, 6, -2, 5], [-2, 3, 1, 0]]
+    # check temp_faces == @[@[(0, 0), (1, 2)], @[(0, 1), (1, 1)], @[(0, 3), (1, 3)]]
+    # check temp_dual_graph == @[@[(2, (0, 0)), (1, (1, 2))], @[(0, (0, 1)), (2, (1, 1))], @[(1, (0, 3)), (0, (1, 3))]]
+    # check distances == @[1, 1, 0]
+    # check previous_face == @[2, 2, 0]
+    # check last_interface_edge == @[(1, 3), (0, 3), (0, 0)]
+    # check shortest_path_edges == @[(0, 3)]
+    check trefoil_4cross.crossings == [[7, 6, 9, 8], [11, 10, 1, 0], [3, 2, 5, 4]]
+    check trefoil_4cross.signs == [-1, -1, -1]
+    check trefoil_4cross.unlinked_unknot_components == 0
+    check trefoil_4cross.link_components == [newLinkComponent[int](0, 2)]
