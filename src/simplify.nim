@@ -688,3 +688,16 @@ proc pickup_arc*[T](link: Link[T], over: bool, arc: seq[(int, int)]): (seq[int],
     # echo link.crossings
     # echo link.signs
     return (elim, new_crossings)
+
+proc pickup_arcs*[T](link: Link[T], over: bool): int =
+    var link_copy = link.copy()
+    var arcs = over_or_under_arcs(link, over)
+    for arc in randomize_within_lengths(arcs):
+        if len(arc) == 1:
+            break
+        let (elim, new_cross) = pickup_arc(link, over, arc)
+        if elim.len > new_cross.len:
+            return elim.len - new_cross.len
+        assert elim.len == new_cross.len
+        (link.crossings, link.signs, link.unlinked_unknot_components, link.link_components) = (link_copy.crossings, link_copy.signs, link_copy.unlinked_unknot_components, link_copy.link_components)
+    return 0
