@@ -2,6 +2,7 @@ import std/sugar
 import std/sequtils
 import std/random
 import std/enumerate
+import std/strformat
 import std/tables
 import std/deques
 import std/algorithm
@@ -503,6 +504,11 @@ proc randomize_within_lengths*[T](items: seq[seq[T]]): seq[seq[T]] =
 proc pickup_arc*[T](link: Link[T], over: bool, arc: seq[(int, int)]): (seq[int], seq[int]) =
     if arc.len == 0:
         raise newException(ValueError, "arc is empty")
+    for i in 1 ..< arc.len:
+        if arc[i][1] mod 2 != (if over: 1 else: 0):
+            raise newException(ValueError, &"over={over}, but arc[{i}][1] == {arc[i][1]} is inconsistent with over, where arc={arc}")
+        if link.next_strand(arc[i-1]) != arc[i]:
+            raise newException(ValueError, &"next strand of {arc[i-1]} is not {arc[i]}")
     var arc_is_cycle = arc.len > 1 and arc[0] == arc[arc.len-1]
     # echo arc_is_cycle
     # map from crossing to its position in arc
