@@ -432,3 +432,7 @@ test "pickup_simplify":
     # 13n3370, with one crossing change via band attachment, with another band attached (and thus the diagram of an unknot)
     var cc2 = link_from_PD_code(@[[0, 21, 1, 22], [20, 1, 21, 2], [2, 19, 36, 20], [18, 32, 19, 13], [17, 30, 18, 27], [25, 16, 26, 17], [4, 16, 5, 15], [14, 4, 15, 3], [7, 13, 8, 12], [11, 28, 12, 29], [10, 24, 11, 23], [22, 10, 23, 9], [29, 8, 0, 9], [6, 27, 7, 28], [24, 5, 25, 6], [26, 14, 33, 31], [30, 31, 34, 32], [33, 3, 37, 35], [35, 37, 36, 34]])
     check pickup_simplify(cc2, 1) == 19
+
+    # check that twists are undone
+    let three_rings_with_twist = link_from_PD_code(@[[5, 7, 0, 6], [6, 0, 7, 1], [1, 5, 2, 4], [9, 2, 8, 3], [3, 8, 4, 9]])
+    check pickup_simplify(three_rings_with_twist, 0) == 1

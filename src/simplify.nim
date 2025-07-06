@@ -877,7 +877,9 @@ proc pickup_simplify*[T](link: Link[T], type_III: int = 0): int =
         let new_cross = link.crossings.len
         stabilized = new_cross == 0 or new_cross == old_cross
     
-    # TODO: connect sum with twists
+    # If the diagram is a "connect sum with twists" remove the
+    # twists. We check for this only once, at the end, for speed.
+    discard untwist_diagram(link)
 
     return init_num_crossings - link.crossings.len
 
