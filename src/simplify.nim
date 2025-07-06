@@ -690,6 +690,10 @@ proc pickup_arc*[T](link: Link[T], over: bool, arc: seq[(int, int)]): int =
         if link.next_strand(arc[i-1]) != arc[i]:
             raise newException(ValueError, &"next strand of {arc[i-1]} is not {arc[i]}")
     let init_num_crossings = link.crossings.len
+    if arc.len > 1 and arc[0] == arc[arc.len-1]:
+        # we have a cycle, for which different rules apply
+        discard pickup_arc_internal(link, over, arc)
+        return init_num_crossings - link.crossings.len
     var (right_endpoint, _) = link.opposite_strand(arc[arc.len-1])
     var left_cycle_index = -1
     var right_cycle_index = -1

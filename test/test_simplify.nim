@@ -309,6 +309,11 @@ test "pickup_arc_internal":
     check trefoil_4cross.link_components == [newLinkComponent[int](0, 2)]
 
 test "pickup_arc":
+    let arc_len_1 = link_from_PD_code(@[[3, 1, 0, 0], [2, 1, 3, 2]])
+    check pickup_arc(arc_len_1, true, @[(0, 1)]) == 0
+    # check left_cycle_index == -1
+    # check right_cycle_index == -1
+
     let one_vertex_unknot = link_from_PD_code(@[[0, 1, 1, 0]])
     check pickup_arc(one_vertex_unknot, false, @[(0, 3), (0, 2)]) == 1
     # check left_cycle_index == 1
@@ -320,6 +325,60 @@ test "pickup_arc":
     check one_vertex_unknot.signs == []
     check one_vertex_unknot.unlinked_unknot_components == 1
     check one_vertex_unknot.link_components == []
+
+    let elim_size_2 = link_from_PD_code(@[[5, 4, 0, 5], [3, 0, 4, 1], [6, 1, 7, 2], [7, 3, 6, 2]], @[-1, -1, -1, 1])
+    check pickup_arc(elim_size_2, true, @[(0, 2), (1, 3), (2, 3), (3, 1)]) == 3
+    # check left_cycle_index == -1
+    # check right_cycle_index == 1
+    # check elim == @[2, 3]
+    # check (cur_c, cur_s) == (1, 3)
+    # check new_arc == @[(0, 2)]
+    # check new_arc == @[(0, 2)]
+
+    let first_pickup_relabel = link_from_PD_code(@[[5, 4, 0, 5], [6, 1, 7, 2], [3, 0, 4, 1], [7, 3, 6, 2]], @[-1, -1, -1, 1])
+    check pickup_arc(first_pickup_relabel, true, @[(0, 2), (2, 3), (1, 3), (3, 1)]) == 3
+    # check left_cycle_index == -1
+    # check right_cycle_index == 1
+    # check elim == @[1, 3]
+    # check (cur_c, cur_s) == (1, 3)
+    # check new_arc == @[(0, 2)]
+    # check new_arc == @[(0, 2)]
+
+    let countdown_len_2 = link_from_PD_code(@[[3, 1, 0, 0], [2, 1, 3, 2]])
+    check pickup_arc(countdown_len_2, true, @[(0, 2), (0, 1), (1, 3)]) == 2
+    # check left_cycle_index == 1
+    # check right_cycle_index == 2
+    # check elim == @[]
+    # check (cur_c, cur_s) == (1, 3)
+    # check new_arc == @[(0, 2), (0, 1)]
+    # check new_arc == @[(0, 2), (0, 1)]
+
+    let update_new_arc_1_0 = link_from_PD_code(@[[2, 1, 3, 2], [3, 1, 0, 0]])
+    check pickup_arc(update_new_arc_1_0, true, @[(1, 2), (1, 1), (0, 3)]) == 2
+    # check left_cycle_index == 1
+    # check right_cycle_index == 2
+    # check elim == @[]
+    # check (cur_c, cur_s) == (0, 3)
+    # check new_arc == @[(1, 2), (1, 1)]
+    # check new_arc == @[(0, 2), (0, 1)]
+
+    let prev_strand_new_arc_1 = link_from_PD_code(@[[3, 3, 0, 2], [4, 0, 5, 1], [7, 2, 4, 1], [6, 6, 7, 5]])
+    check pickup_arc(prev_strand_new_arc_1, true, @[(0, 2), (1, 3), (2, 1), (0, 1)]) == 3
+    # check left_cycle_index == 3
+    # check right_cycle_index == 3
+    # check elim == @[]
+    # check (cur_c, cur_s) == (0, 1)
+    # check new_arc == @[(0, 2), (1, 3), (2, 1)]
+    # check new_arc == @[(2, 1), (1, 3), (2, 1)]
+
+    let update_new_arc_0_0 = link_from_PD_code(@[[3, 0, 4, 1], [5, 4, 0, 5], [6, 1, 7, 2], [7, 3, 6, 2]], @[-1, -1, -1, 1])
+    check pickup_arc(update_new_arc_0_0, true, @[(1, 2), (0, 3), (2, 3), (3, 1)]) == 3
+    # check left_cycle_index == -1
+    # check right_cycle_index == 1
+    # check elim == @[2, 3]
+    # check (cur_c, cur_s) == (0, 3)
+    # check new_arc == @[(1, 2)]
+    # check new_arc == @[(0, 2)]
 
 test "pickup_simplify":
     # 13n3370, with one crossing change via band attachment, with another band attached (and thus the diagram of an unknot)
