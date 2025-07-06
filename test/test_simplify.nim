@@ -380,6 +380,47 @@ test "pickup_arc":
     # check new_arc == @[(1, 2)]
     # check new_arc == @[(0, 2)]
 
+test "untwist_diagram_once":
+    let one_vertex_unknot = link_from_PD_code(@[[0, 1, 1, 0]])
+    check untwist_diagram_once(one_vertex_unknot) == (@[0], @[])
+    check one_vertex_unknot.crossings == []
+    check one_vertex_unknot.signs == []
+    check one_vertex_unknot.unlinked_unknot_components == 1
+    check one_vertex_unknot.link_components == []
+
+    let right_degenerate = link_from_PD_code(@[[3, 4, 0, 5], [4, 1, 5, 0], [1, 2, 2, 3]])
+    check untwist_diagram_once(right_degenerate) == (@[2], @[0, 1])
+    check right_degenerate.crossings == [[5, 4, 7, 6], [1, 0, 3, 2]]
+    check right_degenerate.signs == [1, 1]
+    check right_degenerate.unlinked_unknot_components == 0
+    check right_degenerate.link_components == [newLinkComponent[int](0, 1), newLinkComponent[int](0, 2)]
+
+    let left_degenerate = link_from_PD_code(@[[3, 2, 0, 3], [5, 0, 4, 1], [1, 4, 2, 5]])
+    check untwist_diagram_once(left_degenerate) == (@[0], @[0, 1])
+    check left_degenerate.crossings == [[7, 6, 5, 4], [3, 2, 1, 0]]
+    check left_degenerate.signs == [-1, -1]
+    check left_degenerate.unlinked_unknot_components == 0
+    check left_degenerate.link_components == [newLinkComponent[int](0, 2), newLinkComponent[int](1, 2)]
+
+    # TODO: nondegenerate_no_move_comp
+
+    let nondegenerate_move_comp = link_from_PD_code(@[[5, 2, 0, 3], [1, 0, 2, 1], [3, 4, 4, 5]])
+    check untwist_diagram_once(nondegenerate_move_comp) == (@[0], @[0, 1])
+    check nondegenerate_move_comp.crossings == [[6, 2, 1, 5], [7, 3, 0, 4]]
+    check nondegenerate_move_comp.signs == [-1, -1]
+    check nondegenerate_move_comp.unlinked_unknot_components == 0
+    check nondegenerate_move_comp.link_components == [newLinkComponent[int](0, 3)]
+
+    let middle_s_1 = link_from_PD_code(@[[5, 3, 0, 2], [1, 1, 2, 0], [3, 5, 4, 4]])
+    check untwist_diagram_once(middle_s_1) == (@[0], @[0, 1])
+    check middle_s_1.crossings == [[6, 7, 3, 2], [5, 4, 0, 1]]
+    check middle_s_1.signs == [1, 1]
+    check middle_s_1.unlinked_unknot_components == 0
+    check middle_s_1.link_components == [newLinkComponent[int](1, 2)]
+
+    let trefoil = link_from_PD_code(@[[5, 2, 0, 3], [3, 0, 4, 1], [1, 4, 2, 5]])
+    check untwist_diagram_once(trefoil) == (@[], @[])
+
 test "pickup_simplify":
     # 13n3370, with one crossing change via band attachment, with another band attached (and thus the diagram of an unknot)
     var cc2 = link_from_PD_code(@[[0, 21, 1, 22], [20, 1, 21, 2], [2, 19, 36, 20], [18, 32, 19, 13], [17, 30, 18, 27], [25, 16, 26, 17], [4, 16, 5, 15], [14, 4, 15, 3], [7, 13, 8, 12], [11, 28, 12, 29], [10, 24, 11, 23], [22, 10, 23, 9], [29, 8, 0, 9], [6, 27, 7, 28], [24, 5, 25, 6], [26, 14, 33, 31], [30, 31, 34, 32], [33, 3, 37, 35], [35, 37, 36, 34]])

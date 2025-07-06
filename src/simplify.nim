@@ -785,6 +785,48 @@ proc pickup_arcs*[T](link: Link[T], over: bool): int =
         (link.crossings, link.signs, link.unlinked_unknot_components, link.link_components) = (link_copy.crossings, link_copy.signs, link_copy.unlinked_unknot_components, link_copy.link_components)
     return 0
 
+proc untwist_diagram_once*[T](link: Link[T]): (seq[int], seq[int]) =
+    discard """
+    When the diagram is a connect sum "with a twist", remove one such
+    twist.
+
+    Returns the number of crossings removed.
+    """
+    let num_crossings = link.crossings.len
+    var strand_to_face = newSeq[array[0..3, int]](num_crossings)
+    for (face_index, face) in enumerate(link.faces()):
+        for edge in face:
+            strand_to_face[edge.crossing][edge.strand_index] = face_index
+    for middle_c in 0 ..< num_crossings:
+        for middle_s in 0..1:
+            if strand_to_face[middle_c][middle_s] == strand_to_face[middle_c][middle_s+2]:
+                if link.crossings[middle_c][middle_s+2] == middle_c*4 + (middle_s+1):
+                    return reidemeister_i(link, middle_c)
+                if link.crossings[middle_c][middle_s] == middle_c*4 + (middle_s+3) mod 4:
+                    return reidemeister_i(link, middle_c)
+                for (comp_index, comp) in enumerate(link.link_components):
+                    if comp.crossing == middle_c:
+                        let (prev_c, prev_s) = link.previous_strand((comp.crossing, comp.strand_index))
+                        link.link_components[comp_index] = newLinkComponent(prev_c, prev_s, comp.extra_info)
+                        break
+                var (op1_c, op1_s) = link.opposite_strand((middle_c, middle_s))
+                var (op2_c, op2_s) = link.opposite_strand((middle_c, middle_s+2))
+                link.crossings[op1_c][op1_s] = op2_c*4 + op2_s
+                link.crossings[op2_c][op2_s] = op1_c*4 + op1_s
+                var changed = @[op1_c, op2_c]
+                (op1_c, op1_s) = link.opposite_strand((middle_c, middle_s+1))
+                (op2_c, op2_s) = link.opposite_strand((middle_c, (middle_s+3) mod 4))
+                link.crossings[op1_c][op1_s] = op2_c*4 + op2_s
+                if op1_c != changed[1]:
+                    changed.add(op1_c)
+                link.crossings[op2_c][op2_s] = op1_c*4 + op1_s
+                if op2_c != changed[0]:
+                    changed.add(op2_c)
+                remove_crossing(link, middle_c)
+                update_changed(changed, num_crossings, middle_c)
+                return (@[middle_c], changed)
+    return (@[], @[])
+
 proc pickup_simplify*[T](link: Link[T], type_III: int = 0): int =
     discard """
     Optimizes the overcrossings on a diagram, then the undercrossings,
