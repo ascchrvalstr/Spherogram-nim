@@ -827,6 +827,25 @@ proc untwist_diagram_once*[T](link: Link[T]): (seq[int], seq[int]) =
                 return (@[middle_c], changed)
     return (@[], @[])
 
+proc untwist_diagram*[T](link: Link[T]): int =
+    discard """
+    When the diagram is a connect sum "with a twist", remove all such
+    twists
+
+    This is in fact a "pickup move", but we don't include it in the
+    main pickup_simplify loop because of the speed penalty: it rarely
+    works, but you'd have to check every crossing.
+
+    Returns the number of crossings removed.
+    """
+    var total_removed = 0
+    while true:
+        let removed = untwist_diagram_once(link)[0].len
+        if removed > 0:
+            total_removed += removed
+        else:
+            return total_removed
+
 proc pickup_simplify*[T](link: Link[T], type_III: int = 0): int =
     discard """
     Optimizes the overcrossings on a diagram, then the undercrossings,
