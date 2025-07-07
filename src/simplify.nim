@@ -932,3 +932,14 @@ proc reverse_type_i*[T](link: Link[T], crossing_strand: (int, int), go_under_new
     new_crossing[(given_strand_index+3) mod 4] = link.crossings.len*4 + (given_strand_index+2) mod 4
     link.crossings.add(new_crossing)
     link.signs.add(new_crossing_sign)
+
+proc random_reverse_type_i*[T](link: Link[T]): void =
+    discard """
+    Randomly adds a loop in a strand, adding one crossing with given label
+    """
+    if link.crossings.len == 0:
+        raise newException(ValueError, &"link {link} has no crossings")
+    let crossing = rand(0 ..< link.crossings.len)
+    let strand_index = rand(0 ..< 4)
+    let go_under_new_crossing = bool(rand(0 ..< 2))
+    reverse_type_i(link, (crossing, strand_index), go_under_new_crossing)
