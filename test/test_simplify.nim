@@ -309,10 +309,14 @@ test "pickup_arc_internal":
     check trefoil_4cross.link_components == [newLinkComponent[int](0, 2)]
 
 test "pickup_arc":
+    # neither left or right cycle
+
     let arc_len_1 = link_from_PD_code(@[[3, 1, 0, 0], [2, 1, 3, 2]])
     check pickup_arc(arc_len_1, true, @[(0, 1)]) == 0
     # check left_cycle_index == -1
     # check right_cycle_index == -1
+
+    # right cycle (with or without left cycle)
 
     let one_vertex_unknot = link_from_PD_code(@[[0, 1, 1, 0]])
     check pickup_arc(one_vertex_unknot, false, @[(0, 3), (0, 2)]) == 1
@@ -379,6 +383,70 @@ test "pickup_arc":
     # check (cur_c, cur_s) == (0, 3)
     # check new_arc == @[(1, 2)]
     # check new_arc == @[(0, 2)]
+
+    # left cycle (and no right cycle)
+
+    let left_cycle_no_elim = link_from_PD_code(@[[3, 1, 0, 0], [1, 4, 2, 5], [4, 3, 5, 2]])
+    check pickup_arc(left_cycle_no_elim, true, @[(0, 2), (0, 1)]) == 1
+    # check left_cycle_index == 1
+    # check right_cycle_index == -1
+    # check elim == @[]
+    # check (cur_c, cur_s) == (0, 1)
+    # check new_arc == @[(0, 1)]
+    check left_cycle_no_elim.crossings == [[5, 4, 7, 6], [1, 0, 3, 2]]
+    check left_cycle_no_elim.signs == [1, 1]
+    check left_cycle_no_elim.unlinked_unknot_components == 0
+    check left_cycle_no_elim.link_components == [newLinkComponent[int](0, 1), newLinkComponent[int](1, 1)]
+
+    let elim_len_2 = link_from_PD_code(@[[5, 3, 0, 2], [7, 1, 6, 0], [6, 1, 7, 2], [3, 5, 4, 4]], @[1, 1, -1, 1])
+    check pickup_arc(elim_len_2, true, @[(0, 2), (1, 1), (2, 3), (0, 1)]) == 3
+    # check left_cycle_index == 3
+    # check right_cycle_index == -1
+    # check elim == @[1, 2]
+    # check (cur_c, cur_s) == (0, 1)
+    # check new_arc == @[(0, 1)]
+    check elim_len_2.crossings == [[1, 0, 3, 2]]
+    check elim_len_2.signs == [1]
+    check elim_len_2.unlinked_unknot_components == 1
+    check elim_len_2.link_components == [newLinkComponent[int](0, 1)]
+
+    let elim_len_2_update = link_from_PD_code(@[[7, 1, 6, 0], [3, 5, 4, 4], [5, 3, 0, 2], [6, 1, 7, 2]])
+    check pickup_arc(elim_len_2_update, true, @[(2, 2), (0, 1), (3, 3), (2, 1)]) == 3
+    # check left_cycle_index == 3
+    # check right_cycle_index == -1
+    # check elim == @[0, 3]
+    # check (cur_c, cur_s) == (0, 1)
+    # check new_arc == @[(0, 1)]
+    check elim_len_2_update.crossings == [[1, 0, 3, 2]]
+    check elim_len_2_update.signs == [1]
+    check elim_len_2_update.unlinked_unknot_components == 1
+    check elim_len_2_update.link_components == [newLinkComponent[int](0, 1)]
+
+    let new_arc_len_2 = link_from_PD_code(@[[3, 1, 0, 0], [4, 1, 5, 2], [2, 5, 3, 4]])
+    check pickup_arc(new_arc_len_2, true, @[(0, 2), (0, 1), (1, 3)]) == 1
+    # check left_cycle_index == 1
+    # check right_cycle_index == -1
+    # check elim == @[]
+    # check (cur_c, cur_s) == (0, 1)
+    # check new_arc == @[(0, 1), (1, 3)]
+    # check new_arc == @[(0, 2), (1, 3)]
+    check new_arc_len_2.crossings == [[7, 6, 5, 4], [3, 2, 1, 0]]
+    check new_arc_len_2.signs == [-1, -1]
+    check new_arc_len_2.unlinked_unknot_components == 0
+    check new_arc_len_2.link_components == [newLinkComponent[int](0, 2), newLinkComponent[int](0, 3)]
+
+    let new_arc_len_2_update = link_from_PD_code(@[[3, 1, 0, 0], [2, 5, 3, 4], [4, 1, 5, 2]])
+    check pickup_arc(new_arc_len_2_update, true, @[(0, 2), (0, 1), (2, 3)]) == 1
+    # check left_cycle_index == 1
+    # check right_cycle_index == -1
+    # check elim == @[]
+    # check (cur_c, cur_s) == (0, 1)
+    # check new_arc == @[(0, 1), (2, 3)]
+    # check new_arc == @[(1, 2), (0, 3)]
+    check new_arc_len_2_update.crossings == [[7, 6, 5, 4], [3, 2, 1, 0]]
+    check new_arc_len_2_update.signs == [-1, -1]
+    check new_arc_len_2_update.unlinked_unknot_components == 0
+    check new_arc_len_2_update.link_components == [newLinkComponent[int](0, 2), newLinkComponent[int](0, 3)]
 
 test "untwist_diagram_once":
     let one_vertex_unknot = link_from_PD_code(@[[0, 1, 1, 0]])
