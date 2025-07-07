@@ -893,3 +893,42 @@ proc simplify*[T](link: Link[T], mode: string = "basic", type_III_limit: int = 1
     if mode == "global":
         return pickup_simplify(link, type_III_limit)
     raise newException(ValueError, &"mode={mode} is not among \"basic\", \"level\", \"pickup\" and \"global\"")
+
+proc reverse_type_i*[T](link: Link[T], crossing_strand: (int, int), go_under_new_crossing: bool): void =
+    discard """
+    Add a loop on the strand at crossing_strand with a given label and
+    'handedness' hand (twisting left or right).
+    """
+    link.check_crossing_strand(crossing_strand)
+    let (c, s) = crossing_strand
+    let given_strand_sign = link.strand_sign(c, s)
+    # echo given_strand_sign
+    let (op_c, op_s) = link.opposite_strand(crossing_strand)
+    # the index of the opposite of the given strand in the new crossing
+    var given_strand_index: int
+    var new_crossing_sign: int
+    if not go_under_new_crossing:
+        if given_strand_sign != -1:
+            given_strand_index = 1
+            new_crossing_sign = -given_strand_sign
+        else:
+            given_strand_index = 3
+            new_crossing_sign = given_strand_sign
+    else:
+        if given_strand_sign != -1:
+            given_strand_index = 0
+            new_crossing_sign = given_strand_sign
+        else:
+            given_strand_index = 2
+            new_crossing_sign = -given_strand_sign
+    # echo given_strand_index
+    # echo new_crossing_sign
+    var new_crossing: array[0..3, int]
+    new_crossing[given_strand_index] = c*4 + s
+    link.crossings[c][s] = link.crossings.len*4 + given_strand_index
+    new_crossing[(given_strand_index+1) mod 4] = op_c*4 + op_s
+    link.crossings[op_c][op_s] = link.crossings.len*4 + (given_strand_index+1) mod 4
+    new_crossing[(given_strand_index+2) mod 4] = link.crossings.len*4 + (given_strand_index+3) mod 4
+    new_crossing[(given_strand_index+3) mod 4] = link.crossings.len*4 + (given_strand_index+2) mod 4
+    link.crossings.add(new_crossing)
+    link.signs.add(new_crossing_sign)

@@ -504,3 +504,52 @@ test "pickup_simplify":
     # check that twists are undone
     let three_rings_with_twist = link_from_PD_code(@[[5, 7, 0, 6], [6, 0, 7, 1], [1, 5, 2, 4], [9, 2, 8, 3], [3, 8, 4, 9]])
     check pickup_simplify(three_rings_with_twist, 0) == 1
+
+test "reverse_type_i":
+    var one_vertex_unknot = link_from_PD_code(@[[0, 1, 1, 0]])
+    reverse_type_i(one_vertex_unknot, (0, 2), false)
+    # check given_strand_sign == 1
+    # check given_strand_index == 1
+    # check new_crossing_sign == -1
+    check one_vertex_unknot.crossings == [[3, 6, 5, 0], [7, 2, 1, 4]]
+    check one_vertex_unknot.signs == [-1, -1]
+
+    one_vertex_unknot = link_from_PD_code(@[[0, 1, 1, 0]], @[0])
+    reverse_type_i(one_vertex_unknot, (0, 2), false)
+    # check given_strand_sign == 0
+    # check given_strand_index == 1
+    # check new_crossing_sign == 0
+    check one_vertex_unknot.crossings == [[3, 6, 5, 0], [7, 2, 1, 4]]
+    check one_vertex_unknot.signs == [0, 0]
+
+    one_vertex_unknot = link_from_PD_code(@[[0, 1, 1, 0]])
+    reverse_type_i(one_vertex_unknot, (0, 0), false)
+    # check given_strand_sign == -1
+    # check given_strand_index == 3
+    # check new_crossing_sign == -1
+    check one_vertex_unknot.crossings == [[7, 2, 1, 4], [3, 6, 5, 0]]
+    check one_vertex_unknot.signs == [-1, -1]
+
+    one_vertex_unknot = link_from_PD_code(@[[0, 1, 1, 0]])
+    reverse_type_i(one_vertex_unknot, (0, 2), true)
+    # check given_strand_sign == 1
+    # check given_strand_index == 0
+    # check new_crossing_sign == 1
+    check one_vertex_unknot.crossings == [[3, 5, 4, 0], [2, 1, 7, 6]]
+    check one_vertex_unknot.signs == [-1, 1]
+
+    one_vertex_unknot = link_from_PD_code(@[[0, 1, 1, 0]], @[0])
+    reverse_type_i(one_vertex_unknot, (0, 2), true)
+    # check given_strand_sign == 0
+    # check given_strand_index == 0
+    # check new_crossing_sign == 0
+    check one_vertex_unknot.crossings == [[3, 5, 4, 0], [2, 1, 7, 6]]
+    check one_vertex_unknot.signs == [0, 0]
+
+    one_vertex_unknot = link_from_PD_code(@[[0, 1, 1, 0]])
+    reverse_type_i(one_vertex_unknot, (0, 0), true)
+    # check given_strand_sign == -1
+    # check given_strand_index == 2
+    # check new_crossing_sign == 1
+    check one_vertex_unknot.crossings == [[6, 2, 1, 7], [5, 4, 0, 3]]
+    check one_vertex_unknot.signs == [-1, 1]
