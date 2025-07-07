@@ -490,6 +490,12 @@ proc check_crossing*[T](link: Link[T], cross: int) =
     if cross < 0 or cross >= link.crossings.len:
         raise newException(ValueError, &"crossing {cross} out of bounds [0,{num_crossings})")
 
+proc check_crossing_strand*[T](link: Link[T], crossing_strand: (int, int)) =
+    let (c, s) = crossing_strand
+    link.check_crossing(c)
+    if s < 0 or s >= 4:
+        raise newException(ValueError, &"strand index {s} out of bounds [0, 4)")
+
 proc is_planar*[T](link: Link[T]): bool =
     let num_crossings = link.crossings.len
     if num_crossings == 0:
