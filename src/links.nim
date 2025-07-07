@@ -243,6 +243,8 @@ type CrossingStrand*[T] = object of RootObj
 proc newCrossingStrand*[T](link: Link[T], crossing: int, strand_index: int): CrossingStrand[T] =
     return CrossingStrand[T](link: link, crossing: crossing, strand_index: strand_index)
 
+proc from_pair*[T](link: Link[T], strand: (int, int)): CrossingStrand[T] = newCrossingStrand(link, strand[0], strand[1])
+
 proc rotate*[T](strand: CrossingStrand[T], s: int = 1): CrossingStrand[T] =
     return newCrossingStrand(strand.link, strand.crossing, (strand.strand_index+s) mod 4)
 
@@ -277,6 +279,8 @@ proc is_over_crossing*[T](strand: CrossingStrand[T]): bool =
     return strand.strand_index in [1, 3]
 
 proc `$`*[T](strand: CrossingStrand[T]): string = &"<CS {strand.crossing}, {strand.strand_index}>"
+
+proc to_pair*[T](strand: CrossingStrand[T]): (int, int) = (strand.crossing, strand.strand_index)
 
 proc get_link_components*[T](link: Link[T]): seq[CrossingStrand[T]] =
     return collect:

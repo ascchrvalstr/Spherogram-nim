@@ -992,3 +992,30 @@ proc reverse_type_ii*[T](link: Link[T], strand1: (int, int), strand2: (int, int)
         link.crossings.add([op1_c*4 + op1_s, op2_c*4 + op2_s,
                             num_crossings*4, num_crossings*4 + 3])
         link.signs.add(strand2_sign)
+
+proc random_reverse_type_ii*[T](link: Link[T]): void =
+    discard """
+    Randomly crosses two strands, adding two crossings
+    """
+    # cumulative number of choices for a Reidemeister II move
+    var type_ii_cum_choices = newSeq[int]()
+    var tot_choices = 0
+    let faces = link.faces()
+    for face in faces:
+        type_ii_cum_choices.add(tot_choices)
+        tot_choices += face.len * (face.len-1)
+    if tot_choices == 0:
+        raise newException(ValueError, &"no Reidemeister II moves are possible on the given link")
+    var type_ii_choice = rand(0 ..< tot_choices)
+    var (face_l, face_r) = (0, type_ii_cum_choices.len)
+    while face_r - face_l > 1:
+        let face_m = (face_l + face_r) div 2
+        if type_ii_cum_choices[face_m] <= type_ii_choice:
+            face_l = face_m
+        else:
+            face_r = face_m
+    let chosen_face = faces[face_l]
+    type_ii_choice -= type_ii_cum_choices[face_l]
+    let strand1_index = type_ii_choice div (chosen_face.len-1)
+    let strand2_index = (strand1_index + 1 + type_ii_choice mod (chosen_face.len-1)) mod chosen_face.len
+    reverse_type_ii(link, chosen_face[strand1_index].to_pair(), chosen_face[strand2_index].to_pair())
