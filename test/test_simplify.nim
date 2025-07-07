@@ -553,3 +553,14 @@ test "reverse_type_i":
     # check new_crossing_sign == 1
     check one_vertex_unknot.crossings == [[6, 2, 1, 7], [5, 4, 0, 3]]
     check one_vertex_unknot.signs == [-1, 1]
+
+test "reverse_type_ii":
+    var same_orientation = link_from_PD_code(@[[3, 3, 0, 2], [1, 1, 2, 0]])
+    reverse_type_ii(same_orientation, (0, 2), (1, 2))
+    check same_orientation.crossings == [[1, 0, 8, 11], [5, 4, 15, 14], [2, 13, 12, 3], [10, 9, 7, 6]]
+    check same_orientation.signs == [1, 1, -1, 1]
+
+    same_orientation = link_from_PD_code(@[[3, 3, 0, 2], [1, 1, 2, 0]])
+    reverse_type_ii(same_orientation, (1, 2), (0, 2))
+    check same_orientation.crossings == [[1, 0, 15, 14], [5, 4, 8, 11], [6, 13, 12, 7], [10, 9, 3, 2]]
+    check same_orientation.signs == [1, 1, -1, 1]

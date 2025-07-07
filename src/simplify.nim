@@ -943,3 +943,52 @@ proc random_reverse_type_i*[T](link: Link[T]): void =
     let strand_index = rand(0 ..< 4)
     let go_under_new_crossing = bool(rand(0 ..< 2))
     reverse_type_i(link, (crossing, strand_index), go_under_new_crossing)
+
+proc reverse_type_ii*[T](link: Link[T], strand1: (int, int), strand2: (int, int)): void =
+    discard """
+    Cross two strands defined by two crossing strands strand1 and strand2 in the same face.
+    """
+    link.check_crossing_strand(strand1)
+    link.check_crossing_strand(strand2)
+    if strand1 == strand2:
+        raise newException(ValueError, &"strand1 = {strand1} = strand2, so a reverse Reidemeister II move is impossible")
+    var found = false
+    var cur_strand = newCrossingStrand(link, strand1[0], strand1[1])
+    while true:
+        cur_strand = cur_strand.next_corner()
+        if (cur_strand.crossing, cur_strand.strand_index) == strand2:
+            found = true
+            break
+        if (cur_strand.crossing, cur_strand.strand_index) == strand1:
+            break
+    if not found:
+        raise newException(ValueError, &"strand1 {strand1} is not on the same face as strand2 {strand2}, so a reverse Reidemeister II move is impossible")
+    let (strand1_c, strand1_s) = strand1
+    let (op1_c, op1_s) = link.opposite_strand(strand1)
+    let strand1_sign = link.strand_sign(strand1_c, strand1_s)
+    let (op2_c, op2_s) = strand2
+    let (strand2_c, strand2_s) = link.opposite_strand(strand2)
+    let strand2_sign = link.strand_sign(strand2_c, strand2_s)
+    let num_crossings = link.crossings.len
+    if strand1_sign != -1:
+        link.crossings[strand1_c][strand1_s] = num_crossings*4
+        link.crossings[strand2_c][strand2_s] = num_crossings*4 + 3
+        link.crossings.add([strand1_c*4 + strand1_s, (num_crossings+1)*4 + 1,
+                            (num_crossings+1)*4, strand2_c*4 + strand2_s])
+        link.signs.add(strand2_sign)
+        link.crossings[op1_c][op1_s] = (num_crossings+1)*4 + 2
+        link.crossings[op2_c][op2_s] = (num_crossings+1)*4 + 3
+        link.crossings.add([num_crossings*4 + 2, num_crossings*4 + 1,
+                            op1_c*4 + op1_s, op2_c*4 + op2_s])
+        link.signs.add(-strand2_sign)
+    else:
+        link.crossings[strand1_c][strand1_s] = num_crossings*4 + 2
+        link.crossings[strand2_c][strand2_s] = num_crossings*4 + 1
+        link.crossings.add([(num_crossings+1)*4 + 2, strand2_c*4 + strand2_s,
+                            strand1_c*4 + strand1_s, (num_crossings+1)*4 + 3])
+        link.signs.add(-strand2_sign)
+        link.crossings[op1_c][op1_s] = (num_crossings+1)*4
+        link.crossings[op2_c][op2_s] = (num_crossings+1)*4 + 1
+        link.crossings.add([op1_c*4 + op1_s, op2_c*4 + op2_s,
+                            num_crossings*4, num_crossings*4 + 3])
+        link.signs.add(strand2_sign)
