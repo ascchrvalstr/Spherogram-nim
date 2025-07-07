@@ -1019,3 +1019,25 @@ proc random_reverse_type_ii*[T](link: Link[T]): void =
     let strand1_index = type_ii_choice div (chosen_face.len-1)
     let strand2_index = (strand1_index + 1 + type_ii_choice mod (chosen_face.len-1)) mod chosen_face.len
     reverse_type_ii(link, chosen_face[strand1_index].to_pair(), chosen_face[strand2_index].to_pair())
+
+proc backtrack*[T](link: Link[T], num_steps: int = 10, prob_type_1: float = 0.3, prob_type_2: float = 0.3) =
+    discard """
+    Randomly perform a series of Reidemeister moves which increase or preserve
+    the number of crossings of a link diagram, with the number of such moves
+    num_steps. Can set the probability of type I or type II moves, so the
+    remainder is then the probability of type III.
+    """
+    if link.crossings.len == 0:
+        return
+    if prob_type_1 + prob_type_2 > 1:
+        raise newException(ValueError, &"probabilities {prob_type_1} and {prob_type_2} add to {prob_type_1 + prob_type_2} > 1")
+    for i in 0 ..< num_steps:
+        let x = rand(1.0)
+        if x < prob_type_1:
+            random_reverse_type_i(link)
+        elif x < prob_type_1 + prob_type_2:
+            random_reverse_type_ii(link)
+        else:
+            let poss_moves = possible_type_iii_moves(link)
+            if poss_moves.len > 0:
+                reidemeister_iii(link, sample(poss_moves))
