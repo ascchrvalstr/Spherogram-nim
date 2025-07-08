@@ -1,5 +1,8 @@
 import std/sequtils
 import std/enumerate
+import std/deques
+import std/strformat
+import std/algorithm
 
 import manu
 
@@ -25,6 +28,92 @@ proc linking_matrix*[T](link: Link[T]): seq[seq[int]] =
         for j in 0 ..< num_components:
             linking_matrix[i][j] = linking_matrix[i][j] div 2
     return linking_matrix
+
+proc add_edge*[T](edges: var seq[seq[(int, T)]], u: int, v: int, edge_data: T): void =
+    edges[u].add((v, edge_data))
+    if u != v:
+        edges[v].add((u, edge_data))
+
+proc white_graph*[T](link: Link[T]): seq[seq[(int, (int, int))]] =
+    discard """
+    Return the white graph of a non-split link projection.
+
+    This method generates a multigraph whose vertices correspond
+    to the faces of the diagram, with an edge joining two
+    vertices whenever the corresponding faces contain opposite
+    corners at some crossing. The vertex corresponding to a face
+    is the index of the face in the list returned by Link.faces().
+
+    According to the conventions of "Gordon, C. McA. and
+    Litherland, R. A, 'On the signature of a link', Inventiones
+    math. 47, 23-69 (1978)", in a checkerboard coloring of a link
+    diagram the unbounded region is always the first white region.
+    Of course, the choice of which region is unbounded is
+    arbitrary; it is just a matter of which region on S^2 contains
+    the point at infinity.  In this method an equivalent arbitrary
+    choice is made by just returning the second component of the
+    multigraph, as determined by a homegrown re-implementation of
+    Graph.connected_components(). (By the documentation of
+    Graph.connected_components(), the second component is no
+    bigger than the first.)
+
+    Note that this may produce a meaningless result in the case of
+    a split link diagram.  Consequently if the diagram is split,
+    i.e if the multigraph has more than 2 components, a ValueError
+    is raised::
+
+        nim: K = Link('5_1')
+        nim: K.white_graph()
+        Subgraph of (): Multi-graph on 2 vertices
+
+    WARNING: While there is also a "black_graph" method, it need
+    not be the case that these two graphs are complementary in the
+    expected way.
+    """
+    let num_crossings = link.crossings.len
+    var strand_to_face = newSeq[array[0..3, int]](num_crossings)
+    let faces = link.faces()
+    let num_faces = faces.len
+    for face_index, face in enumerate(faces):
+        for strand in face:
+            strand_to_face[strand.crossing][strand.strand_index] = face_index
+    # echo strand_to_face
+    var edges = newSeq[seq[(int, (int, int))]](num_faces)
+    for c in 0 ..< num_crossings:
+        edges.add_edge(strand_to_face[c][0], strand_to_face[c][2], (c, 1))
+        edges.add_edge(strand_to_face[c][1], strand_to_face[c][3], (c, -1))
+    # echo edges
+    var conn_comps = newSeq[seq[int]]()
+    var visited = newSeq[bool](num_faces)
+    for face in 0 ..< num_faces:
+        if not visited[face]:
+            var bfs_queue = toDeque([face])
+            visited[face] = true
+            var cur_conn_comp = @[face]
+            while bfs_queue.len > 0:
+                var cur_face = bfs_queue.popFirst()
+                for (next_face, _) in edges[cur_face]:
+                    if not visited[next_face]:
+                        visited[next_face] = true
+                        cur_conn_comp.add(next_face)
+                        bfs_queue.addLast(next_face)
+            sort(cur_conn_comp)
+            conn_comps.add(cur_conn_comp)
+    # echo conn_comps
+    if conn_comps.len > 2:
+        raise newException(ValueError, &"the link diagram is split because the pre-white graph has {conn_comps.len} > 2 connected components")
+    sort(conn_comps, proc (x, y: seq[int]): int = y.len - x.len)
+    # echo conn_comps
+    var index_within_comp_1 = newSeqWith(num_faces, -1)
+    for (face_index, face) in enumerate(conn_comps[1]):
+        index_within_comp_1[face] = face_index
+    # echo index_within_comp_1
+    var new_graph = newSeq[seq[(int, (int, int))]](conn_comps[1].len)
+    for face_u in conn_comps[1]:
+        for (face_v, edge_data) in edges[face_u]:
+            if index_within_comp_1[face_v] != -1:
+                new_graph[index_within_comp_1[face_u]].add((index_within_comp_1[face_v], edge_data))
+    return new_graph
 
 proc colorability_matrix*[T](link: Link[T]): seq[seq[int]] =
     let edges = link.pieces()
