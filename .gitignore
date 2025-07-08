@@ -1,6 +1,9 @@
 nimcache/
 nimblecache/
 htmldocs/
+
+src/planarmap/
+
 test/scratchpad*
 test/test_invariants
 test/test_links
