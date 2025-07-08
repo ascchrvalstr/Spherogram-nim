@@ -137,6 +137,25 @@ proc goeritz_matrix*[T](link: Link[T]): (seq[seq[int]], seq[seq[(int, (int, int)
             m_remove_r0_c0[i][j] = m[i+1][j+1]
     return (m_remove_r0_c0, G)
 
+proc signature*[T](link: Link[T]): int =
+    let (m0, G) = goeritz_matrix(link)
+    let size = m0.len
+    var m = newSeqWith(size, newSeq[float64](size))
+    for i in 0 ..< size:
+        for j in 0 ..< size:
+            m[i][j] = float64(m0[i][j])
+    var ans = 0
+    for eigenvalue in matrix(m).eig().getRealEigenvalues():
+        if eigenvalue > 0:
+            ans += 1
+        elif eigenvalue < 0:
+            ans -= 1
+    for i in 0 ..< G.len:
+        for (j, edge_data) in G[i]:
+            if i <= j and edge_data[1] == link.signs[edge_data[0]]:
+                ans += edge_data[1]
+    return -ans
+
 proc colorability_matrix*[T](link: Link[T]): seq[seq[int]] =
     let edges = link.pieces()
     var m = newSeqWith(link.crossings.len, newSeq[int](edges.len))

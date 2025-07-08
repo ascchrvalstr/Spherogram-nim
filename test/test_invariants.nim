@@ -26,6 +26,19 @@ test "goeritz_matrix":
     # check m == @[@[0, -3], @[-3, 0]]
     # check m == @[@[3, -3], @[-3, 3]]
 
+test "signature":
+    let trefoil = link_from_PD_code(@[[5, 2, 0, 3], [3, 0, 4, 1], [1, 4, 2, 5]])
+    check trefoil.signature() == 2
+
+    let figure_eight = link_from_PD_code(@[[7, 4, 0, 5], [3, 0, 4, 1], [1, 7, 2, 6], [5, 3, 6, 2]])
+    check figure_eight.signature() == 0
+
+    let knot_51 = link_from_PD_code(@[[9, 4, 0, 5], [5, 0, 6, 1], [1, 6, 2, 7], [7, 2, 8, 3], [3, 8, 4, 9]])
+    check knot_51.signature() == 4
+
+    let knot_52 = link_from_PD_code(@[[4, 0, 5, 9], [0, 6, 1, 5], [8, 2, 9, 1], [2, 8, 3, 7], [6, 4, 7, 3]])
+    check knot_52.signature() == -2
+
 test "colorability_matrix":
     let trefoil = link_from_PD_code(@[[5, 2, 0, 3], [3, 0, 4, 1], [1, 4, 2, 5]])
     check trefoil.colorability_matrix() == @[@[-1, -1, 2], @[2, -1, -1], @[-1, 2, -1]]
