@@ -161,5 +161,12 @@ proc determinant*[T](link: Link[T], method0: string = "goeritz"): int =
         # note that float to int conversion in Nim is similar to C++ in that the number is rounded towards zero, so we need to add 0.5 and then convert to int
         return int(abs(matrix(N).det()) + 0.5)
     if method0 == "goeritz":
-        raise newException(AssertionDefect, "Not implemented")
+        let goeritz_matrix = link.goeritz_matrix()[0]
+        let size = goeritz_matrix.len
+        var N = newSeqWith(size, newSeq[float64](size))
+        for i in 0 ..< size:
+            for j in 0 ..< size:
+                N[i][j] = float64(goeritz_matrix[i][j])
+        # echo matrix(N).det()
+        return int(abs(matrix(N).det()) + 0.5)
     raise newException(AssertionDefect, "Not implemented")

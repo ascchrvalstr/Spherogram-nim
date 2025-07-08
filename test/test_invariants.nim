@@ -37,7 +37,13 @@ test "colorability_matrix":
 test "determinant":
     let trefoil = link_from_PD_code(@[[5, 2, 0, 3], [3, 0, 4, 1], [1, 4, 2, 5]])
     check trefoil.determinant("color") == 3
+    check trefoil.determinant("goeritz") == 3
     let hopf_positive = link_from_PD_code(@[[2, 1, 3, 0], [1, 2, 0, 3]])
     check hopf_positive.determinant("color") == 2
+    check hopf_positive.determinant("goeritz") == 2
     let figure_eight = link_from_PD_code(@[[7, 4, 0, 5], [3, 0, 4, 1], [1, 7, 2, 6], [5, 3, 6, 2]])
     check figure_eight.determinant("color") == 5
+    check figure_eight.determinant("goeritz") == 5
+    let knot_51 = link_from_PD_code(@[[9, 4, 0, 5], [5, 0, 6, 1], [1, 6, 2, 7], [7, 2, 8, 3], [3, 8, 4, 9]])
+    check knot_51.determinant("color") == 5
+    check knot_51.determinant("goeritz") == 5
