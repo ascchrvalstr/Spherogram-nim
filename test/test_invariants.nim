@@ -20,6 +20,12 @@ test "white_graph":
     # check conn_comps == @[@[0, 2, 4], @[1, 3]]
     # check index_within_comp_1 == @[-1, 0, -1, 1, -1]
 
+test "goeritz_matrix":
+    let trefoil = link_from_PD_code(@[[5, 2, 0, 3], [3, 0, 4, 1], [1, 4, 2, 5]])
+    check trefoil.goeritz_matrix()[0] == @[@[3]]
+    # check m == @[@[0, -3], @[-3, 0]]
+    # check m == @[@[3, -3], @[-3, 3]]
+
 test "colorability_matrix":
     let trefoil = link_from_PD_code(@[[5, 2, 0, 3], [3, 0, 4, 1], [1, 4, 2, 5]])
     check trefoil.colorability_matrix() == @[@[-1, -1, 2], @[2, -1, -1], @[-1, 2, -1]]

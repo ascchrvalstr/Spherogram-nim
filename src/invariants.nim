@@ -115,6 +115,28 @@ proc white_graph*[T](link: Link[T]): seq[seq[(int, (int, int))]] =
                 new_graph[index_within_comp_1[face_u]].add((index_within_comp_1[face_v], edge_data))
     return new_graph
 
+proc goeritz_matrix*[T](link: Link[T]): (seq[seq[int]], seq[seq[(int, (int, int))]]) =
+    var G = white_graph(link)
+    let N = G.len
+    var m = newSeqWith(N, newSeq[int](N))
+    for i in 0 ..< N:
+        for (j, edge_data) in G[i]:
+            if i <= j:
+                m[i][j] += edge_data[1]
+                m[j][i] = m[i][j]
+    # echo m
+    for j in 0 ..< N:
+        var column_sum = 0
+        for i in 0 ..< N:
+            column_sum += m[i][j]
+        m[j][j] = -column_sum
+    # echo m
+    var m_remove_r0_c0 = newSeqWith(N-1, newSeq[int](N-1))
+    for i in 0 ..< N-1:
+        for j in 0 ..< N-1:
+            m_remove_r0_c0[i][j] = m[i+1][j+1]
+    return (m_remove_r0_c0, G)
+
 proc colorability_matrix*[T](link: Link[T]): seq[seq[int]] =
     let edges = link.pieces()
     var m = newSeqWith(link.crossings.len, newSeq[int](edges.len))
