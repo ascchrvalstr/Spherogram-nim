@@ -883,16 +883,18 @@ proc pickup_simplify*[T](link: Link[T], type_III: int = 0): int =
 
     return init_num_crossings - link.crossings.len
 
-proc simplify*[T](link: Link[T], mode: string = "basic", type_III_limit: int = 100): int =
-    if mode == "basic":
+type SimplificationMode* = enum
+    basic, level, pickup, global
+
+proc simplify*[T](link: Link[T], mode: SimplificationMode = SimplificationMode.basic, type_III_limit: int = 100): int =
+    if mode == SimplificationMode.basic:
         return basic_simplify(link)
-    if mode == "level":
+    if mode == SimplificationMode.level:
         return simplify_via_level_type_iii(link, type_III_limit)
-    if mode == "pickup":
+    if mode == SimplificationMode.pickup:
         return pickup_simplify(link)
-    if mode == "global":
-        return pickup_simplify(link, type_III_limit)
-    raise newException(ValueError, &"mode={mode} is not among \"basic\", \"level\", \"pickup\" and \"global\"")
+    assert mode == SimplificationMode.global
+    return pickup_simplify(link, type_III_limit)
 
 proc reverse_type_i*[T](link: Link[T], crossing_strand: (int, int), go_under_new_crossing: bool): void =
     discard """
