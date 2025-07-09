@@ -13,6 +13,8 @@ import std/strformat
 import std/random
 import std/sequtils
 import std/enumerate
+import std/algorithm
+import std/sugar
 
 import planarmap
 import links
@@ -72,3 +74,28 @@ proc random_link_internal*[T](num_crossings: int, edge_conn_param: int = 4, num_
         pd_code[a][i] = k
         pd_code[b][j] = k
     return link_from_PD_code_with_extra_info[T](pd_code)
+
+proc longest_components*[T](link: Link[T], num_requested_components: int): seq[int] =
+    let num_components = link.link_components.len
+    if num_requested_components < 0 or num_requested_components > num_components:
+        raise newException(ValueError, &"num_requested_components = {num_requested_components} is not within [0, num_components] = [0, {num_components}]")
+    let num_crossings = link.crossings.len
+    var strand_to_comp = newSeqWith(num_crossings, [-1, -1, -1, -1])
+    for comp_index, comp in enumerate(link.link_components):
+        var cur_c = comp.crossing
+        var cur_s = comp.strand_index
+        while strand_to_comp[cur_c][cur_s] == -1:
+            strand_to_comp[cur_c][cur_s] = comp_index
+            strand_to_comp[cur_c][(cur_s+2) mod 4] = comp_index
+            (cur_c, cur_s) = link.next_strand((cur_c, cur_s))
+    var components_by_self_crossings = newSeq[(int, int)](num_components)
+    for i in 0 ..< num_components:
+        components_by_self_crossings[i][1] = i
+    for c in 0 ..< num_crossings:
+        if strand_to_comp[c][0] == strand_to_comp[c][1]:
+            components_by_self_crossings[strand_to_comp[c][0]][0] += 1
+    sort(components_by_self_crossings, Descending)
+    # echo components_by_self_crossings
+    return collect:
+        for i in 0 ..< num_requested_components:
+            components_by_self_crossings[i][1]
