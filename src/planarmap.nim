@@ -53,7 +53,7 @@ proc pmStatGauss*(Map: ptr pmMap): clong {.importc.}
 proc randrange_callback*(n: clong): clong =
     return rand(1 .. n)
 
-proc random_map*(num_vertices: int, edge_connectivity: int = 4, num_link_comps: int = 0, max_tries: int = 100): Option[seq[(clong, seq[clong])]] =
+proc raw_random_map*(num_vertices: int, edge_connectivity: int = 4, num_link_comps: int = 0, max_tries: int = 100): Option[seq[(int, seq[int])]] =
     discard """
     Use Gilles Schaeffer's "Planarmap program" to generate
     a random 4-valent planar graph with the given number
@@ -104,18 +104,18 @@ proc random_map*(num_vertices: int, edge_connectivity: int = 4, num_link_comps: 
             tries += 1
 
         if tries == max_tries:
-            return none(seq[(clong, seq[clong])])
+            return none(seq[(int, seq[int])])
 
-    var ans = newSeq[(clong, seq[clong])]()
+    var ans = newSeq[(int, seq[int])]()
     vert = the_map.root.from0
     while vert != nil:
-        var edges_at_vert = newSeq[clong]()
+        var edges_at_vert = newSeq[int]()
         edge = vert.root
         while edge != vert.root.prev:
-            edges_at_vert.add(edge.label)
+            edges_at_vert.add(int(edge.label))
             edge = edge.next
         edges_at_vert.add(edge.label)
-        ans.add((vert.label, edges_at_vert))
+        ans.add((int(vert.label), edges_at_vert))
         vert = vert.next
     discard pmFreeMap(addr the_map)
     return some(ans)
