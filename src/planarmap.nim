@@ -1,4 +1,5 @@
 import std/random
+import std/options
 import std/strformat
 
 {.compile: "planarmap/PMconjugation.c".}
@@ -52,7 +53,7 @@ proc pmStatGauss*(Map: ptr pmMap): clong {.importc.}
 proc randrange_callback*(n: clong): clong =
     return rand(1 .. n)
 
-proc random_map*(num_vertices: int, edge_connectivity: int = 4, num_link_comps: int = 0, max_tries: int = 100): seq[(clong, seq[clong])] =
+proc random_map*(num_vertices: int, edge_connectivity: int = 4, num_link_comps: int = 0, max_tries: int = 100): Option[seq[(clong, seq[clong])]] =
     discard """
     Use Gilles Schaeffer's "Planarmap program" to generate
     a random 4-valent planar graph with the given number
@@ -103,7 +104,7 @@ proc random_map*(num_vertices: int, edge_connectivity: int = 4, num_link_comps: 
             tries += 1
 
         if tries == max_tries:
-            return
+            return none(seq[(clong, seq[clong])])
 
     var ans = newSeq[(clong, seq[clong])]()
     vert = the_map.root.from0
@@ -117,4 +118,4 @@ proc random_map*(num_vertices: int, edge_connectivity: int = 4, num_link_comps: 
         ans.add((vert.label, edges_at_vert))
         vert = vert.next
     discard pmFreeMap(addr the_map)
-    return ans
+    return some(ans)
