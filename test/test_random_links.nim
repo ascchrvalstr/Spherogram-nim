@@ -46,3 +46,10 @@ test "random_link":
         link = links[0]
         check link.crossings.len <= num_crossings
         check link.link_components.len == 3
+    var decomposed = false
+    for T in 0 ..< 100:
+        var links = random_link(6, return_all_pieces = true)
+        if links.len > 1:
+            decomposed = true
+            break
+    check decomposed
