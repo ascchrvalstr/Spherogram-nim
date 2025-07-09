@@ -18,6 +18,7 @@ import std/sugar
 
 import planarmap
 import links
+import simplify
 
 type LinkGenerationError* = object of CatchableError
 
@@ -99,3 +100,150 @@ proc longest_components*[T](link: Link[T], num_requested_components: int): seq[i
     return collect:
         for i in 0 ..< num_requested_components:
             components_by_self_crossings[i][1]
+
+proc random_link_with_extra_info*[T](
+    crossings: int, num_components0: Option[int] = none(int),
+    initial_map_gives_link: bool = false, alternating: bool = false,
+    consistent_twist_regions: bool = false,
+    simplification_mode: Option[SimplificationMode] = some(SimplificationMode.basic),
+    prime_decomposition: bool = true, return_all_pieces: bool = false,
+    max_tries: int = 100
+): seq[Link[T]] =
+    discard """
+    Generates a random link from a model that starts with a random
+    4-valent planar graph sampled with the uniform distribution by
+    Schaeffer's `PlanarMap program.
+    <http://www.lix.polytechnique.fr/~schaeffe/PagesWeb/PlanarMap/index-en.html>`_
+
+    The ``crossings`` argument specifies the number of vertices of the
+    initial planar graph G; the number of crossing in the returned knot
+    will typically be less. The meanings of the optional arguments are as
+    follows:
+
+    1. ``num_components``: The number of components of the returned link.
+       The link naively associated to G may have too few or too many
+       components. The former situation is resolved by picking another G,
+       and the latter by either
+
+       a. Taking the sublink consisting of the components with the largest
+          self-crossing numbers.
+
+       b. Resampling G until the desired number of components is achieved;
+          this can take a very long time as the expected number of
+          components associated to G grows linearly in the number of
+          vertices.
+
+       When the argument ``initial_map_gives_link`` is ``False`` the
+       program does (a) and this is the default behavior. If you want (b)
+       set this argument to ``True``.
+
+       To get the entire link associated to G, set ``num_components`` to
+       ```any```, which is also the default.
+
+    2. The 4-valent vertices of G are turned into crossings by flipping a
+       fair coin. If you want the unique alternating diagram associated to
+       G, pass ``alternating=True``.  If you want there to be no
+       obvious Type II Reidemeister moves, pass
+       ``consistent_twist_regions=True``.
+
+    3. ``simplify``: Whether and how to try to reduce the number of
+       crossings of the link via Reidemeister moves using the method
+       ``Link.simplify``.  For no simplification, set ``simplify=None``;
+       otherwise set ``simplify`` to be the appropriate mode for
+       ``Link.simplify``, for example ``basic`` (the default), ``level``,
+       or ``global``.
+
+    4. ``prime_decomposition``:  The initial link generated from G may not
+       be prime (and typically isn't if ``initial_map_gives_link`` is
+       ``False``). When set (the default), the program undoes any connect
+       sums that are "diagrammatic obvious", simplifies the result, and
+       repeats until pieces are "diagrammatically prime".  If
+       ``return_all_pieces`` is ``False`` (the default) then only the
+       largest (apparently) prime component is returned; otherwise all
+       summands are returned as a list.
+
+       Warning: If ``prime_decomposition=True`` and
+       ``return_all_pieces=False``, then the link returned may have
+       fewer components than requested.  This is because a prime piece
+       can have fewer components than the link as a whole.
+
+
+    Some examples:
+
+    >>> K = random_link(25, num_components=1, initial_map_gives_link=True, alternating=True)
+    >>> K
+    <Link: 1 comp; 25 cross>
+
+    >>> L= random_link(30, consistent_twist_regions=True, simplify = 'global')
+    >>> isinstance(random_link(30, return_all_pieces=True), list)
+    True
+    """
+    # This means no trivial loops. PlanarMap accepts 6, which means
+    # no bigons, but this is unbearably slow.
+    let edge_conn_param = 4
+
+    var link: Link[T]
+    if num_components0.isNone:
+        link = random_link_internal[T](crossings, edge_conn_param)
+    elif initial_map_gives_link:
+        link = random_link_internal[T](crossings, edge_conn_param, num_components0.get(), max_tries)
+    else:
+        let num_components = num_components0.get()
+        for i in 0 ..< max_tries:
+            link = random_link_internal[T](crossings, edge_conn_param)
+            if link.link_components.len >= num_components:
+                break
+        if link.link_components.len < num_components:
+            raise newException(LinkGenerationError, &"did not generate the requested link after {max_tries} tries")
+        var comps = longest_components(link, num_components)
+        var comps_mask = newSeq[bool](link.link_components.len)
+        for comp in comps:
+            comps_mask[comp] = true
+        link = link.sublink(comps_mask)
+
+    # Adjust the currently random crossings to match the request
+
+    if alternating:
+        raise newException(AssertionDefect, "Not implemented")
+
+    if consistent_twist_regions:
+        raise newException(AssertionDefect, "Not implemented")
+
+    # Initial simplification, if any.
+
+    if simplification_mode.isSome:
+        discard link.simplify(simplification_mode.get())
+
+    # Pull into "prime" pieces, if requested.
+
+    if prime_decomposition:
+        var prime_pieces = newSeq[Link[T]]()
+        for L in link.deconnect_sum():
+            var L_copy = L.copy()
+            if simplification_mode.isSome:
+                discard L_copy.simplify(simplification_mode.get())
+            for small_L in L_copy.deconnect_sum():
+                prime_pieces.add(small_L)
+        if return_all_pieces:
+            return prime_pieces
+        var largest_prime_piece_index = 0
+        for i in 1 ..< prime_pieces.len:
+            if prime_pieces[i].crossings.len > prime_pieces[largest_prime_piece_index].crossings.len:
+                largest_prime_piece_index = i
+        return @[prime_pieces[largest_prime_piece_index]]
+    else:
+        return @[link]
+
+proc random_link*(
+    crossings: int, num_components: Option[int] = none(int),
+    initial_map_gives_link: bool = false, alternating: bool = false,
+    consistent_twist_regions: bool = false,
+    simplification_mode: Option[SimplificationMode] = some(SimplificationMode.basic),
+    prime_decomposition: bool = true, return_all_pieces: bool = false,
+    max_tries: int = 100
+): seq[Link0] =
+    return random_link_with_extra_info[int](
+        crossings, num_components, initial_map_gives_link, alternating,
+        consistent_twist_regions, simplification_mode,
+        prime_decomposition, return_all_pieces, max_tries
+    )
