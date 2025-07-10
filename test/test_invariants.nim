@@ -1,4 +1,5 @@
 import std/unittest
+import std/tables
 
 import ../src/links
 import ../src/invariants
@@ -10,6 +11,22 @@ test "linking_matrix":
     check l2a1_0.linking_matrix() == @[@[0, -1], @[-1, 0]]
     let l2a1_1 = link_from_PD_code(@[[4, 2, 3, 1], [2, 4, 1, 3]])
     check l2a1_1.linking_matrix() == @[@[0, 1], @[1, 0]]
+
+test "knot_floer_homology":
+    let trefoil = link_from_PD_code(@[[1, 5, 2, 4], [5, 3, 0, 2], [3, 1, 4, 0]])
+    let trefoil_hfk = trefoil.knot_floer_homology()
+    check trefoil_hfk.modulus == 2
+    check trefoil_hfk.ranks.len == 3
+    check trefoil_hfk.ranks[(-1, -2)] == 1
+    check trefoil_hfk.ranks[(0, -1)] == 1
+    check trefoil_hfk.ranks[(1, 0)] == 1
+    check trefoil_hfk.total_rank == 3
+    check trefoil_hfk.seifert_genus == 1
+    check trefoil_hfk.fibered
+    check trefoil_hfk.L_space_knot
+    check trefoil_hfk.tau == 1
+    check trefoil_hfk.nu == 1
+    check trefoil_hfk.epsilon == 1
 
 test "white_graph":
     let trefoil = link_from_PD_code(@[[5, 2, 0, 3], [3, 0, 4, 1], [1, 4, 2, 5]])

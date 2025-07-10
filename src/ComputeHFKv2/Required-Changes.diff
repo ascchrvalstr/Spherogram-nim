@@ -1,0 +1,26 @@
+diff --git a/../../../knot_floer_homology/ComputeHFKv2/KnotFloer.cpp b/./KnotFloer.cpp
+index 0641c8c..4f8e3d0 100644
+--- a/../../../knot_floer_homology/ComputeHFKv2/KnotFloer.cpp
++++ b/./KnotFloer.cpp
+@@ -6,7 +6,6 @@
+ #include<iostream>
+ #include<fstream>
+ #include<string>
+-#include<Python.h>
+ 
+ using namespace std;
+ 
+@@ -54,11 +53,11 @@ KnotFloerComplex  ComputingKnotFloer(MorseCode Morse, int Prime, bool verbose){
+          else  AfterCrossing(MorseList[i]);
+          
+          Simplify();
+-         if (PyErr_CheckSignals()) {
++         /*if (PyErr_CheckSignals()) {
+            KnotFloerComplex KFC;
+            KFC.Prime = 0;
+            return KFC;
+-	 }
++	 }*/
+        }
+     if (verbose) {
+       cout<<endl;//(GeneratorList,ArrowList) represents a D-Module over B(2,1);

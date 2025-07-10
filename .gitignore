@@ -2,6 +2,8 @@ nimcache/
 nimblecache/
 htmldocs/
 
+src/ComputeHFKv2/*
+!src/ComputeHFKv2/Required-Changes.diff
 src/planarmap/
 
 test/scratchpad*

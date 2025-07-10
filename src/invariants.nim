@@ -7,6 +7,7 @@ import std/algorithm
 import manu
 
 import links
+import knot_floer_homology
 
 proc linking_matrix*[T](link: Link[T]): seq[seq[int]] =
     let num_crossings = link.crossings.len
@@ -33,6 +34,13 @@ proc add_edge*[T](edges: var seq[seq[(int, T)]], u: int, v: int, edge_data: T): 
     edges[u].add((v, edge_data))
     if u != v:
         edges[v].add((u, edge_data))
+
+proc knot_floer_homology*[T](link: Link[T], prime: int = 2): HFK =
+    if link.link_components.len + link.unlinked_unknot_components > 1:
+        raise newException(ValueError, &"knot Floer homology only works for knots, but this has {link.link_components.len + link.unlinked_unknot_components} components")
+    if link.link_components.len == 0 and link.unlinked_unknot_components == 1:
+        return link_from_PD_code(@[[4, 2, 5, 1], [2, 0, 3, 5], [3, 0, 4, 1]]).knot_floer_homology()
+    return pd_code_to_hfk(repr(link.PD_code()), prime)
 
 proc white_graph*[T](link: Link[T]): seq[seq[(int, (int, int))]] =
     discard """
