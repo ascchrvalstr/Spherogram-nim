@@ -6,6 +6,7 @@ src/ComputeHFKv2/*
 !src/ComputeHFKv2/Required-Changes.diff
 src/planarmap/
 
+test/HFK_data.json
 test/scratchpad*
 test/test_invariants
 test/test_links

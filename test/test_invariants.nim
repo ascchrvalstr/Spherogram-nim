@@ -1,5 +1,7 @@
 import std/unittest
+import std/json
 import std/tables
+import std/strscans
 
 import ../src/links
 import ../src/invariants
@@ -13,20 +15,33 @@ test "linking_matrix":
     check l2a1_1.linking_matrix() == @[@[0, 1], @[1, 0]]
 
 test "knot_floer_homology":
-    let trefoil = link_from_PD_code(@[[1, 5, 2, 4], [5, 3, 0, 2], [3, 1, 4, 0]])
-    let trefoil_hfk = trefoil.knot_floer_homology()
-    check trefoil_hfk.modulus == 2
-    check trefoil_hfk.ranks.len == 3
-    check trefoil_hfk.ranks[(-1, -2)] == 1
-    check trefoil_hfk.ranks[(0, -1)] == 1
-    check trefoil_hfk.ranks[(1, 0)] == 1
-    check trefoil_hfk.total_rank == 3
-    check trefoil_hfk.seifert_genus == 1
-    check trefoil_hfk.fibered
-    check trefoil_hfk.L_space_knot
-    check trefoil_hfk.tau == 1
-    check trefoil_hfk.nu == 1
-    check trefoil_hfk.epsilon == 1
+    const hfk_data_json = staticRead"HFK_data.json"
+    let knot_list = parseJson(hfk_data_json)
+    for knot_node in knot_list.items():
+        var pd_code = newSeq[Crossing]()
+        for pd_code_item in knot_node["PD_code"].items():
+            assert pd_code_item.len == 4
+            var pd_code_crossing: array[0..3, int]
+            for s in 0 ..< 4:
+                pd_code_crossing[s] = pd_code_item[s].getInt()
+            pd_code.add(pd_code_crossing)
+        var hfk = link_from_PD_code(pd_code).knot_floer_homology()
+        check hfk.modulus == knot_node["modulus"].getInt()
+        var ranks = knot_node["ranks"]
+        check hfk.ranks.len == ranks.len
+        # echo hfk.ranks.len, " ", ranks.len
+        for (key, val) in ranks.pairs():
+            var a, b: int
+            discard scanf(key, "($i, $i)", a, b)
+            check hfk.ranks[(a, b)] == val.getInt()
+            # echo a, " ", b, " ", val.getInt()
+        check hfk.total_rank == knot_node["total_rank"].getInt()
+        check hfk.seifert_genus == knot_node["seifert_genus"].getInt()
+        check hfk.fibered == knot_node["fibered"].getBool()
+        check hfk.L_space_knot == knot_node["L_space_knot"].getBool()
+        check hfk.tau == knot_node["tau"].getInt()
+        check hfk.nu == knot_node["nu"].getInt()
+        check hfk.epsilon == knot_node["epsilon"].getInt()
 
 test "white_graph":
     let trefoil = link_from_PD_code(@[[5, 2, 0, 3], [3, 0, 4, 1], [1, 4, 2, 5]])
