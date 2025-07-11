@@ -448,6 +448,13 @@ test "pickup_arc":
     check new_arc_len_2_update.unlinked_unknot_components == 0
     check new_arc_len_2_update.link_components == [newLinkComponent[int](0, 2), newLinkComponent[int](0, 3)]
 
+test "optimize_overcrossings":
+    var L = link_from_PD_code(@[[10, 4, 11, 3], [7, 2, 8, 3], [8, 0, 9, 5],
+                                [4, 10, 5, 9], [1, 6, 2, 7], [11, 0, 6, 1]])
+    check L.crossings.len == 6
+    check L.simplify(SimplificationMode.level) == 0
+    check L.optimize_overcrossings() == 1
+
 test "untwist_diagram_once":
     let one_vertex_unknot = link_from_PD_code(@[[0, 1, 1, 0]])
     check untwist_diagram_once(one_vertex_unknot) == (@[0], @[])

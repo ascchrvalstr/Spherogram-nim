@@ -785,6 +785,16 @@ proc pickup_arcs*[T](link: Link[T], over: bool): int =
         (link.crossings, link.signs, link.unlinked_unknot_components, link.link_components) = (link_copy.crossings, link_copy.signs, link_copy.unlinked_unknot_components, link_copy.link_components)
     return 0
 
+proc optimize_overcrossings*[T](link: Link[T]): int =
+    discard """
+    Minimizes the number of crossings of a strand which crosses entirely
+    above the diagram by finding the path crossing over the diagram with
+    the least number of overcrossings.  It begins with the longest
+    overcrossing, and continues with smaller ones until it successfully
+    reduces the number of crossings. Returns number of crossings removed.
+    """
+    return pickup_arcs(link, true)
+
 proc untwist_diagram_once*[T](link: Link[T]): (seq[int], seq[int]) =
     discard """
     When the diagram is a connect sum "with a twist", remove one such
