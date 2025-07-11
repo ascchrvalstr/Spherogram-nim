@@ -33,7 +33,7 @@ proc copy*[T](link: Link[T]): Link[T] =
 
 type Link0* = Link[int]
 
-proc strand_sign(signs: seq[int], c: int, s: int): int =
+proc strand_sign*(signs: seq[int], c: int, s: int): int =
     assert signs[c] in [-1, 1]
     return [-1, signs[c], 1, -signs[c]][s]
 
