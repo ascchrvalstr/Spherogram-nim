@@ -10,6 +10,31 @@ test "writhe":
     let left_handed_trefoil = link_from_PD_code(@[[5, 2, 0, 3], [3, 0, 4, 1], [1, 4, 2, 5]])
     check left_handed_trefoil.writhe() == -3
 
+test "rotate_crossing":
+    var left_handed_trefoil = link_from_PD_code(@[[5, 2, 0, 3], [3, 0, 4, 1], [1, 4, 2, 5]])
+    left_handed_trefoil.rotate_crossing(0, 0)
+    check left_handed_trefoil.crossings == [[11, 10, 5, 4], [3, 2, 9, 8], [7, 6, 1, 0]]
+    check left_handed_trefoil.signs == [-1, -1, -1]
+    check left_handed_trefoil.link_components == [newLinkComponent[int](0, 2)]
+
+    left_handed_trefoil = link_from_PD_code(@[[5, 2, 0, 3], [3, 0, 4, 1], [1, 4, 2, 5]])
+    left_handed_trefoil.rotate_crossing(0, 3)
+    check left_handed_trefoil.crossings == [[10, 5, 4, 11], [2, 1, 9, 8], [7, 6, 0, 3]]
+    check left_handed_trefoil.signs == [1, -1, -1]
+    check left_handed_trefoil.link_components == [newLinkComponent[int](0, 1)]
+
+    left_handed_trefoil = link_from_PD_code(@[[5, 2, 0, 3], [3, 0, 4, 1], [1, 4, 2, 5]], @[0, 0, 0])
+    left_handed_trefoil.rotate_crossing(0, 2)
+    check left_handed_trefoil.crossings == [[5, 4, 11, 10], [1, 0, 9, 8], [7, 6, 3, 2]]
+    check left_handed_trefoil.signs == [0, 0, 0]
+    check left_handed_trefoil.link_components == [newLinkComponent[int](0, 2)]
+
+    var two_vertex_unknot = link_from_PD_code(@[[3, 1, 0, 0], [1, 3, 2, 2]])
+    two_vertex_unknot.rotate_crossing(0, 1)
+    check two_vertex_unknot.crossings == [[3, 5, 4, 0], [2, 1, 7, 6]]
+    check two_vertex_unknot.signs == [-1, 1]
+    check two_vertex_unknot.link_components == [newLinkComponent[int](0, 2)]
+
 test "is_alternating":
     let trefoil = link_from_PD_code(@[[5, 2, 0, 3], [3, 0, 4, 1], [1, 4, 2, 5]])
     check trefoil.is_alternating()

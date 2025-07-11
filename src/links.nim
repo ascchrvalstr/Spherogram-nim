@@ -235,6 +235,24 @@ proc writhe*[T](link: Link[T]): int =
         writhe += s
     return writhe
 
+proc rotate_crossing*[T](link: Link[T], c: int, theta0: int): void =
+    var theta = theta0 mod 4
+    if link.signs[c] != 0 and theta notin [0, 2-link.signs[c]]:
+        raise newException(ValueError, &"the rotation degree {theta0}*90 degrees ccw is incompatible with the crossing {c}'s sign {link.signs[c]}")
+    if theta != 0:
+        link.signs[c] = -link.signs[c]
+    for (comp_index, comp) in enumerate(link.link_components):
+        if comp.crossing == c:
+            link.link_components[comp_index].strand_index = (link.link_components[comp_index].strand_index + theta) mod 4
+    let old_crossing_c = link.crossings[c]
+    for s in 0 ..< 4:
+        let op = old_crossing_c[s]
+        var (op_c, op_s) = (op div 4, op mod 4)
+        if op_c == c:
+            op_s = (op_s + theta) mod 4
+        link.crossings[c][(s + theta) mod 4] = op_c*4 + op_s
+        link.crossings[op_c][op_s] = c*4 + (s + theta) mod 4
+
 type CrossingStrand*[T] = object of RootObj
     link*: Link[T]
     crossing*: int
