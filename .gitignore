@@ -13,3 +13,4 @@ test/test_links
 test/test_random_links
 test/test_simplify
 test/test_torus
+test/test_twist

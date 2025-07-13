@@ -19,6 +19,7 @@ import std/sugar
 import planarmap
 import links
 import simplify
+import twist
 
 type LinkGenerationError* = object of CatchableError
 
@@ -207,7 +208,7 @@ proc random_link_with_extra_info*[T](
         raise newException(AssertionDefect, "Not implemented")
 
     if consistent_twist_regions:
-        raise newException(AssertionDefect, "Not implemented")
+        discard make_twist_regions_consistent(link)
 
     # Initial simplification, if any.
 
