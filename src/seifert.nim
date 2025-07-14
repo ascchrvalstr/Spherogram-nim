@@ -127,3 +127,21 @@ proc remove_admissible_move*[T](link: Link[T]): bool =
                         reverse_type_ii(link, cs2, cs1)
                         return true
     return false
+
+proc isotope_to_braid*[T](link: Link[T]): void =
+    discard """
+    Performs Reidemester II moves until the Seifert tree becomes a chain, i.e.
+    the Seifert circles are all nested and compatibly oriented, following
+    P. Vogel, "Representation of links by braids, a new algorithm"
+    """
+    while remove_admissible_move(link):
+        discard
+
+proc is_chain*(tree: seq[array[0..1, HashSet[int]]]): bool =
+    var tails = collect:
+        for e in tree:
+            e[0]
+    var heads = collect:
+        for e in tree:
+            e[1]
+    return toHashSet(tails).len == tails.len and toHashSet(heads).len == heads.len

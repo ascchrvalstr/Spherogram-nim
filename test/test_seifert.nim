@@ -36,3 +36,12 @@ test "remove_admissible_move":
     # check pair == (2, 0)
     # check cs1 == (2, 1)
     # check cs2 == (4, 1)
+
+test "isotope_to_braid and is_chain":
+    var knot52 = link_from_PD_code(@[[4, 0, 5, 9], [0, 6, 1, 5], [8, 2, 9, 1], [2, 8, 3, 7], [6, 4, 7, 3]])
+    isotope_to_braid(knot52)
+    check is_chain(seifert_tree(knot52))
+
+    var knot61 = link_from_PD_code(@[[6, 11, 7, 0], [0, 5, 1, 6], [10, 2, 11, 1], [2, 10, 3, 9], [8, 4, 9, 3], [4, 8, 5, 7]])
+    isotope_to_braid(knot61)
+    check is_chain(seifert_tree(knot61))
