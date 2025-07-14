@@ -6,6 +6,8 @@ Code written by Malik Obeidin.
 import std/strformat
 import std/sugar
 import std/enumerate
+import std/sets
+import std/sequtils
 
 import links
 
@@ -59,3 +61,42 @@ proc admissible_moves*[T](link: Link[T]): (seq[((int, int), (int, int))], seq[(i
                     pairs.add((cs1.to_pair(), cs2.to_pair()))
                     seifert_circle_pairs.add((circle1, circle2))
     return (pairs, seifert_circle_pairs)
+
+proc seifert_tree*[T](link: Link[T]): seq[array[0..1, HashSet[int]]] =
+    discard """
+    The oriented tree corresponding to the complementary regions of
+    the Seifert circles.
+    """
+    var circles = seifert_circles(link)
+    # echo circles
+    let num_crossings = link.crossings.len
+    var strand_to_circle = newSeqWith(num_crossings, [-1, -1, -1, -1])
+    for (circle_index, circle) in enumerate(circles):
+        for (strand_c, strand_s) in circle:
+            strand_to_circle[strand_c][strand_s] = circle_index
+    # echo strand_to_circle
+    var edges = collect:
+        for n in 0 ..< circles.len:
+            [toHashSet([n]), toHashSet([n])]
+    # echo edges
+    for c in 0 ..< num_crossings:
+        var under_circle = strand_to_circle[c][if link.signs[c] == 1: 1 else: 3]
+        var over_circle = strand_to_circle[c][2]
+        # echo under_circle, " ", over_circle
+        if link.signs[c] == -1:
+            swap(under_circle, over_circle)
+        edges[over_circle][1] = union(edges[over_circle][1], edges[under_circle][0])
+        edges[under_circle][0] = edges[over_circle][1]
+        # echo edges
+    # connect all vertices which intersect
+    let num_circles = circles.len
+    for e1_index in 0 ..< num_circles-1:
+        let e1 = edges[e1_index]
+        for e2_index in e1_index+1 ..< num_circles:
+            let e2 = edges[e2_index]
+            for i in 0 ..< 2:
+                for j in 0 ..< 2:
+                    if intersection(e1[i], e2[j]).len > 1:
+                        edges[e1_index][i] = union(edges[e1_index][i], edges[e2_index][j])
+                        edges[e2_index][j] = edges[e1_index][i]
+    return edges
