@@ -10,6 +10,7 @@ import std/sets
 import std/sequtils
 
 import links
+import simplify
 
 proc seifert_circles*[T](link: Link[T]): seq[seq[(int, int)]] =
     discard """
@@ -100,3 +101,29 @@ proc seifert_tree*[T](link: Link[T]): seq[array[0..1, HashSet[int]]] =
                         edges[e1_index][i] = union(edges[e1_index][i], edges[e2_index][j])
                         edges[e2_index][j] = edges[e1_index][i]
     return edges
+
+proc remove_admissible_move*[T](link: Link[T]): bool =
+    discard """
+    Performs a Reidemester II move to remove one branching point of the Seifert
+    tree. The goal is to turn the Seifert tree into a chain.
+    """
+    var (moves, circle_pairs) = admissible_moves(link)
+    var tree = seifert_tree(link)
+    # echo moves
+    # echo circle_pairs
+    # echo tree
+    for e1_index in 0 ..< tree.len-1:
+        let e1 = tree[e1_index]
+        for e2_index in e1_index+1 ..< tree.len:
+            let e2 = tree[e2_index]
+            if e1[0] == e2[0] or e1[1] == e2[1]:
+                # edges start or end at the same point
+                # echo e1_index, " ", e2_index
+                for (n, pair) in enumerate(circle_pairs):
+                    if toHashSet([pair[0], pair[1]]) == toHashSet([e1_index, e2_index]):
+                        # echo n, " ", pair
+                        var (cs1, cs2) = moves[n]
+                        # echo cs1, " ", cs2
+                        reverse_type_ii(link, cs2, cs1)
+                        return true
+    return false
