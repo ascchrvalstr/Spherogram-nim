@@ -85,3 +85,22 @@ test "braid_word":
 
     var knot52 = link_from_PD_code(@[[4, 0, 5, 9], [0, 6, 1, 5], [8, 2, 9, 1], [2, 8, 3, 7], [6, 4, 7, 3]])
     check braid_word(knot52) == [-1, 2, 3, 2, 2, 1, 2, -3, 2]
+
+test "seifert_matrix":
+    var trefoil = link_from_PD_code(@[[5, 2, 0, 3], [3, 0, 4, 1], [1, 4, 2, 5]])
+    check trefoil.seifert_matrix()[0] == @[@[-1, 0], @[1, -1]]
+
+    var hopf_positive = link_from_PD_code(@[[2, 1, 3, 0], [1, 2, 0, 3]])
+    check hopf_positive.seifert_matrix()[0] == @[@[1]]
+
+    var hopf_negative = link_from_PD_code(@[[0, 2, 1, 3], [3, 1, 2, 0]])
+    check hopf_negative.seifert_matrix()[0] == @[@[-1]]
+
+    var fig8 = link_from_PD_code(@[[7, 4, 0, 5], [3, 0, 4, 1], [1, 7, 2, 6], [5, 3, 6, 2]])
+    check fig8.seifert_matrix()[0] == @[@[-1, 0], @[1, 1]]
+
+    var knot51 = link_from_PD_code(@[[9, 4, 0, 5], [5, 0, 6, 1], [1, 6, 2, 7], [7, 2, 8, 3], [3, 8, 4, 9]])
+    check knot51.seifert_matrix()[0] == @[@[-1, 0, 0, 0], @[1, -1, 0, 0], @[0, 1, -1, 0], @[0, 0, 1, -1]]
+
+    var knot52 = link_from_PD_code(@[[4, 0, 5, 9], [0, 6, 1, 5], [8, 2, 9, 1], [2, 8, 3, 7], [6, 4, 7, 3]])
+    check knot52.seifert_matrix()[0] == @[@[0, 0, 0, 0, 0, 0], @[1, 1, -1, 0, 0, 0], @[0, 0, 1, -1, 0, 0], @[0, 0, 0, 1, -1, 0], @[-1, 0, 0, 0, 1, 0], @[0, 0, 0, 1, 0, 0]]

@@ -10,6 +10,7 @@ import std/sets
 import std/sequtils
 import std/tables
 import std/algorithm
+import std/math
 
 import links
 import simplify
@@ -256,3 +257,73 @@ proc braid_word*[T](link: Link[T]): seq[int] =
         for arrow in arrows:
             let (_, strand, over_or_under) = (arrow[0], arrow[1], arrow[2])
             [-1, 1][over_or_under] * (strand+1)
+
+proc seifert_matrix*[T](link: Link[T]): (seq[seq[int]], seq[seq[int]]) =
+    discard """
+    Returns the Seifert matrix of a link by first making it isotopic to a braid
+    closure.
+
+    Uses the algorithm described in:
+
+    J. Collins, "An algorithm for computing the Seifert matrix of a link
+    from a braid representation." (2007).
+    """
+    var arrows = braid_arrows(link)
+    var strands = collect(initHashSet()):
+        for x in arrows:
+            {x[1]}
+    var grouped_by_strand = collect:
+        for strand in strands:
+            collect:
+                for x in arrows:
+                    if x[1] == strand:
+                        x
+    var hom_gens = collect:
+        for group in grouped_by_strand:
+            collect:
+                for i in 0 ..< group.len-1:
+                    [group[i][0], group[i+1][0], group[i][2], group[i+1][2]]
+    var num_gens = sum(mapIt(hom_gens, it.len))
+    var matrix = newSeqWith(num_gens, newSeq[int](num_gens))
+    var entries = initTable[(int, int), int]()
+    var cur_index = 0
+    for (i, hgi) in enumerate(hom_gens):
+        for j in 0 ..< hgi.len:
+            entries[(i, j)] = cur_index
+            cur_index += 1
+    var type_matrix = newSeqWith(num_gens, newSeq[int](num_gens))
+    for (n, strand) in enumerate(hom_gens):
+        # diagonal entries
+        for (m, gen) in enumerate(strand):
+            if gen[2] == gen[3]:
+                # same sign, otherwise entry is zero
+                if gen[2] == 0:
+                    # both right-handed
+                    matrix[entries[(n, m)]][entries[(n, m)]] = -1
+                    type_matrix[entries[(n, m)]][entries[(n, m)]] = 1
+                else:
+                    # both left-handed
+                    matrix[entries[(n, m)]][entries[(n, m)]] = 1
+                    type_matrix[entries[(n, m)]][entries[(n, m)]] = 2
+        # two gens on same strand, one after the other
+        for (m, gen) in enumerate(strand[0 ..< strand.len-1]):
+            if gen[3] == 0:
+                # shared crossing is right-handed
+                matrix[entries[(n, m+1)]][entries[(n, m)]] = 1
+                type_matrix[entries[(n, m+1)]][entries[(n, m)]] = 3
+            else:
+                # shared crossing is left-handed
+                matrix[entries[(n, m)]][entries[(n, m+1)]] = -1
+                type_matrix[entries[(n, m)]][entries[(n, m+1)]] = 4
+        # two gens on adjacent strand, "staggered"
+        if n != hom_gens.len-1:
+            var next_strand = hom_gens[n+1]
+            for (m, gen) in enumerate(strand):
+                for (l, next_gen) in enumerate(next_strand):
+                    if next_gen[0] < gen[0] and gen[0] < next_gen[1] and next_gen[1] < gen[1]:
+                        matrix[entries[(n+1, l)]][entries[(n, m)]] = 1
+                        type_matrix[entries[(n+1, l)]][entries[(n, m)]] = 5
+                    elif gen[0] < next_gen[0] and next_gen[0] < gen[1] and gen[1] < next_gen[1]:
+                        matrix[entries[(n+1, l)]][entries[(n, m)]] = -1
+                        type_matrix[entries[(n+1, l)]][entries[(n, m)]] = 6
+    return (matrix, type_matrix)
