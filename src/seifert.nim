@@ -241,3 +241,18 @@ proc braid_arrows*[T](link0: Link[T]): seq[array[0..2, int]] =
     return collect:
         for arrow in arrows:
             [arrow[0], arrow[2], arrow[3]]
+
+proc braid_word*[T](link: Link[T]): seq[int] =
+    discard """
+    Return a list of integers which defines a braid word whose closure is the
+    given link.  The natural numbers 1, 2, 3, etc are the generators and the
+    negatives are the inverses.
+
+    Implementation follows P. Vogel, "Representation of links by
+    braids, a new algorithm".
+    """
+    var arrows = braid_arrows(link)
+    return collect:
+        for arrow in arrows:
+            let (_, strand, over_or_under) = (arrow[0], arrow[1], arrow[2])
+            [-1, 1][over_or_under] * (strand+1)

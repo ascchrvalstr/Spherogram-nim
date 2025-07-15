@@ -72,3 +72,16 @@ test "braid_arrows":
     # check positions_in_next_strand == @[{0: (0, 0), 1: (1, 0), 2: (2, 0)}]
     # check arrows == @[[2, 2, 0, 0], [0, 0, 0, 0], [1, 1, 0, 0]]
     # check arrows == @[[0, 0, 0, 0], [1, 1, 0, 0], [2, 2, 0, 0]]
+
+test "braid_word":
+    var trefoil = link_from_PD_code(@[[5, 2, 0, 3], [3, 0, 4, 1], [1, 4, 2, 5]])
+    check braid_word(trefoil) == [-1, -1, -1]
+
+    var fig8 = link_from_PD_code(@[[1, 7, 2, 6], [5, 3, 6, 2], [7, 4, 0, 5], [3, 0, 4, 1]])
+    check braid_word(fig8) == [1, -2, 1, -2]
+
+    var knot51 = link_from_PD_code(@[[9, 4, 0, 5], [5, 0, 6, 1], [1, 6, 2, 7], [7, 2, 8, 3], [3, 8, 4, 9]])
+    check braid_word(knot51) == [-1, -1, -1, -1, -1]
+
+    var knot52 = link_from_PD_code(@[[4, 0, 5, 9], [0, 6, 1, 5], [8, 2, 9, 1], [2, 8, 3, 7], [6, 4, 7, 3]])
+    check braid_word(knot52) == [-1, 2, 3, 2, 2, 1, 2, -3, 2]
