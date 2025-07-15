@@ -45,3 +45,16 @@ test "isotope_to_braid and is_chain":
     var knot61 = link_from_PD_code(@[[6, 11, 7, 0], [0, 5, 1, 6], [10, 2, 11, 1], [2, 10, 3, 9], [8, 4, 9, 3], [4, 8, 5, 7]])
     isotope_to_braid(knot61)
     check is_chain(seifert_tree(knot61))
+
+test "straighten_arrows":
+    var arrows = @[[0, 0, 0, 0], [1, 1, 0, 0], [2, 2, 0, 0]]
+    straighten_arrows(arrows)
+    check arrows == @[[0, 0, 0, 0], [1, 1, 0, 0], [2, 2, 0, 0]]
+
+    arrows = @[[0, 0, 0, 1], [1, 2, 0, 1], [1, 0, 1, 0], [3, 1, 1, 0]]
+    straighten_arrows(arrows)
+    check arrows == @[[0, 0, 0, 1], [2, 2, 0, 1], [1, 1, 1, 0], [3, 3, 1, 0]]
+
+    arrows = @[[0, 0, 0, 0], [1, 4, 0, 1], [1, 0, 1, 1], [2, 2, 1, 1], [3, 3, 1, 1], [5, 4, 1, 1], [6, 6, 1, 1], [1, 0, 2, 0], [5, 1, 2, 1]]
+    straighten_arrows(arrows)
+    check arrows == @[[0, 0, 0, 0], [5, 5, 0, 1], [1, 1, 1, 1], [3, 3, 1, 1], [4, 4, 1, 1], [6, 6, 1, 1], [8, 8, 1, 1], [2, 2, 2, 0], [7, 7, 2, 1]]

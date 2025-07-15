@@ -145,3 +145,28 @@ proc is_chain*(tree: seq[array[0..1, HashSet[int]]]): bool =
         for e in tree:
             e[1]
     return toHashSet(tails).len == tails.len and toHashSet(heads).len == heads.len
+
+proc straighten_arrows*(arrows: var seq[array[0..3, int]]): void =
+    var totally_straightened = false
+    while not totally_straightened:
+        totally_straightened = true
+        for arrow in arrows:
+            var (tail, head) = (arrow[0], arrow[1])
+            if tail < head:
+                # need to move tail down
+                var diff = head - tail
+                for (other_arrow_index, x) in enumerate(arrows):
+                    if x[2] == arrow[2] and x[0] >= tail:
+                        arrows[other_arrow_index][0] += diff
+                    elif x[2] == arrow[2]-1 and x[1] >= tail:
+                        arrows[other_arrow_index][1] += diff
+                totally_straightened = false
+            elif head < tail:
+                # need to move head down
+                var diff = tail - head
+                for (other_arrow_index, x) in enumerate(arrows):
+                    if x[2] == arrow[2] and x[1] >= head:
+                        arrows[other_arrow_index][1] += diff
+                    elif x[2] == arrow[2]+1 and x[0] >= head:
+                        arrows[other_arrow_index][0] += diff
+                totally_straightened = false
