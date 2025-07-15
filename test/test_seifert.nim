@@ -33,7 +33,7 @@ test "remove_admissible_move":
     # check tree == @[[{3, 0, 2, 1}, {0}], [{1}, {3, 0, 2, 1}], [{3, 0, 2, 1}, {2}], [{3}, {3, 0, 2, 1}]]
     # check (e1_index, e2_index) == (0, 2)
     # check n == 5
-    # check pair == (2, 0)
+    # check circle_pairs[n] == (2, 0)
     # check cs1 == (2, 1)
     # check cs2 == (4, 1)
 

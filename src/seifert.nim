@@ -111,6 +111,13 @@ proc remove_admissible_move*[T](link: Link[T]): bool =
     tree. The goal is to turn the Seifert tree into a chain.
     """
     var (moves, circle_pairs) = admissible_moves(link)
+    var pair_to_index = initTable[(int, int), int]()
+    for (n, pair) in enumerate(circle_pairs):
+        var pair_copy = pair
+        if pair_copy[0] > pair_copy[1]:
+            swap(pair_copy[0], pair_copy[1])
+        if pair_copy notin pair_to_index:
+            pair_to_index[(pair_copy[0], pair_copy[1])] = n
     var tree = seifert_tree(link)
     # echo moves
     # echo circle_pairs
@@ -122,13 +129,13 @@ proc remove_admissible_move*[T](link: Link[T]): bool =
             if e1[0] == e2[0] or e1[1] == e2[1]:
                 # edges start or end at the same point
                 # echo e1_index, " ", e2_index
-                for (n, pair) in enumerate(circle_pairs):
-                    if toHashSet([pair[0], pair[1]]) == toHashSet([e1_index, e2_index]):
-                        # echo n, " ", pair
-                        var (cs1, cs2) = moves[n]
-                        # echo cs1, " ", cs2
-                        reverse_type_ii(link, cs2, cs1)
-                        return true
+                if (e1_index, e2_index) in pair_to_index:
+                    let n = pair_to_index[(e1_index, e2_index)]
+                    # echo n, " ", circle_pairs[n]
+                    var (cs1, cs2) = moves[n]
+                    # echo cs1, " ", cs2
+                    reverse_type_ii(link, cs2, cs1)
+                    return true
     return false
 
 proc isotope_to_braid*[T](link: Link[T]): void =
