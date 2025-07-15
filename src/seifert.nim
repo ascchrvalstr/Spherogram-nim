@@ -8,6 +8,8 @@ import std/sugar
 import std/enumerate
 import std/sets
 import std/sequtils
+import std/tables
+import std/algorithm
 
 import links
 import simplify
@@ -170,3 +172,72 @@ proc straighten_arrows*(arrows: var seq[array[0..3, int]]): void =
                     elif x[2] == arrow[2]+1 and x[0] >= head:
                         arrows[other_arrow_index][0] += diff
                 totally_straightened = false
+
+proc braid_arrows*[T](link0: Link[T]): seq[array[0..2, int]] =
+    discard """
+    Helper function to determine positions of all the crossings in a braid
+    description of the link.
+    """
+    var link = link0.copy()
+    isotope_to_braid(link)
+    var circles = seifert_circles(link)
+    var tree = seifert_tree(link)
+    # echo circles
+    # echo tree
+    var tails = collect:
+        for e in tree:
+            e[0]
+    var heads = collect(initHashSet()):
+        for e in tree:
+            {e[1]}
+    # echo tails
+    # echo heads
+    var start = -1
+    for (t_index, t) in enumerate(tails):
+        if t notin heads:
+            start = t_index
+            break
+    # echo start
+
+    var ordered_strands = @[circles[start]]
+    for i in 0 ..< circles.len-1:
+        var new_tail = tree[start][1]
+        start = tails.find(new_tail)
+        ordered_strands.add(circles[start])
+    # echo ordered_strands
+
+    for i in 0 ..< ordered_strands.len-1:
+        for (n, cep) in enumerate(ordered_strands[i]):
+            var found_next = false
+            for (m, next_cep) in enumerate(ordered_strands[i+1]):
+                if cep[0] == next_cep[0]:
+                    let arr = ordered_strands[i+1]
+                    ordered_strands[i+1] = concat(arr[m ..< arr.len], arr[0 ..< m])
+                    found_next = true
+                    break
+            if found_next:
+                break
+    # echo ordered_strands
+
+    var positions_in_next_strand = newSeq[Table[int, (int, int)]]()
+    for i in 0 ..< ordered_strands.len-1:
+        var positions = initTable[int, (int, int)]()
+        for (n, cep) in enumerate(ordered_strands[i]):
+            for (m, next_cep) in enumerate(ordered_strands[i+1]):
+                if cep[0] == next_cep[0]:
+                    positions[n] = (m, (cep[1] + (if cep[1] == 2: 1 else: -1) * link.signs[cep[0]] + 4) mod 2)
+                    break
+        positions_in_next_strand.add(positions)
+    # echo positions_in_next_strand
+
+    var arrows = collect:
+        for (n, positions) in enumerate(positions_in_next_strand):
+            for (i, position) in positions.pairs:
+                [i, position[0], n, position[1]]
+    # echo arrows
+    straighten_arrows(arrows)
+    sort(arrows, proc (x, y: array[0..3, int]): int = x[0] - y[0])
+    # echo arrows
+    return collect:
+        for arrow in arrows:
+            [arrow[0], arrow[2], arrow[3]]
