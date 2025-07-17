@@ -8,6 +8,7 @@ import std/deques
 import std/algorithm
 
 import links
+import config
 
 proc remove_crossing*[T](link: Link[T], cross: int): void =
     discard """
@@ -965,16 +966,17 @@ proc reverse_type_ii*[T](link: Link[T], strand1: (int, int), strand2: (int, int)
     if strand1 == strand2:
         raise newException(ValueError, &"strand1 = {strand1} = strand2, so a reverse Reidemeister II move is impossible")
     var found = false
-    var cur_strand = newCrossingStrand(link, strand1[0], strand1[1])
-    while true:
-        cur_strand = cur_strand.next_corner()
-        if (cur_strand.crossing, cur_strand.strand_index) == strand2:
-            found = true
-            break
-        if (cur_strand.crossing, cur_strand.strand_index) == strand1:
-            break
-    if not found:
-        raise newException(ValueError, &"strand1 {strand1} is not on the same face as strand2 {strand2}, so a reverse Reidemeister II move is impossible")
+    when reverse_type_ii_check_same_face:
+        var cur_strand = newCrossingStrand(link, strand1[0], strand1[1])
+        while true:
+            cur_strand = cur_strand.next_corner()
+            if (cur_strand.crossing, cur_strand.strand_index) == strand2:
+                found = true
+                break
+            if (cur_strand.crossing, cur_strand.strand_index) == strand1:
+                break
+        if not found:
+            raise newException(ValueError, &"strand1 {strand1} is not on the same face as strand2 {strand2}, so a reverse Reidemeister II move is impossible")
     let (strand1_c, strand1_s) = strand1
     let (op1_c, op1_s) = link.opposite_strand(strand1)
     let strand1_sign = link.strand_sign(strand1_c, strand1_s)
