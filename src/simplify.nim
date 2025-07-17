@@ -623,7 +623,7 @@ proc pickup_arc_internal*[T](link: Link[T], over: bool, arc: seq[(int, int)]): (
     var last_interface_edge = newSeq[(int, int)](temp_faces.len)
     distances[start_face] = 0
     var bfs_queue = toDeque([start_face])
-    while bfs_queue.len > 0:
+    while bfs_queue.len > 0 and distances[end_face] == -1:
         let cur_face = bfs_queue.popFirst()
         for (next_face, interface_edge) in temp_dual_graph[cur_face]:
             if distances[next_face] == -1:
