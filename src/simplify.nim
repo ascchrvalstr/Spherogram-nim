@@ -965,8 +965,8 @@ proc reverse_type_ii*[T](link: Link[T], strand1: (int, int), strand2: (int, int)
     link.check_crossing_strand(strand2)
     if strand1 == strand2:
         raise newException(ValueError, &"strand1 = {strand1} = strand2, so a reverse Reidemeister II move is impossible")
-    var found = false
     when reverse_type_ii_check_same_face:
+        var found = false
         var cur_strand = newCrossingStrand(link, strand1[0], strand1[1])
         while true:
             cur_strand = cur_strand.next_corner()
