@@ -165,6 +165,12 @@ test "reidemeister_iii":
     reidemeister_iii(all_strands_different, [(2, 2), (4, 2), (0, 3)])
     check all_strands_different.crossings == @[[21, 9, 16, 12], [7, 18, 11, 4], [17, 1, 20, 6], [3, 19, 15, 14], [2, 8, 5, 13], [10, 0, 23, 22]]
 
+    # new special case detected by running RL-for-KnotTheory
+    # one strand is glued to its third next neighbor, ccw or cw (which yield the same strand)
+    let glued_to_third_neighbor = link_from_PD_code(@[[1, 5, 0, 2], [2, 0, 3, 1], [3, 4, 4, 5]])
+    reidemeister_iii(glued_to_third_neighbor, [(0, 0), (1, 2), (2, 3)])
+    check glued_to_third_neighbor.crossings == @[[7, 6, 5, 9], [10, 2, 1, 0], [11, 3, 4, 8]]
+
 test "simplify_via_level_type_iii":
     # 13n3370, with one crossing change via band attachment, with another band attached (and thus the diagram of an unknot)
     var cc2 = link_from_PD_code(@[[0, 21, 1, 22], [20, 1, 21, 2], [2, 19, 36, 20], [18, 32, 19, 13], [17, 30, 18, 27], [25, 16, 26, 17], [4, 16, 5, 15], [14, 4, 15, 3], [7, 13, 8, 12], [11, 28, 12, 29], [10, 24, 11, 23], [22, 10, 23, 9], [29, 8, 0, 9], [6, 27, 7, 28], [24, 5, 25, 6], [26, 14, 33, 31], [30, 31, 34, 32], [33, 3, 37, 35], [35, 37, 36, 34]])

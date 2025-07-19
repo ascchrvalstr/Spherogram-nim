@@ -281,6 +281,8 @@ proc reidemeister_iii*[T](link: Link[T], triple: array[0..2, (int, int)]): void 
             cs[0]*4 + (ss[0]+1) mod 4
         elif old_crossings[1][(ss[1]+3) mod 4] div 4 == cs[1]:
             cs[2]*4 + (ss[2]+1) mod 4
+        elif old_crossings[1][(ss[1]+3) mod 4] div 4 == cs[0]:
+            cs[1]*4 + (ss[1]+1) mod 4
         else:
             old_crossings[1][(ss[1]+3) mod 4]
     )
@@ -289,6 +291,8 @@ proc reidemeister_iii*[T](link: Link[T], triple: array[0..2, (int, int)]): void 
             cs[1]*4 + ss[1]
         elif old_crossings[2][(ss[2]+2) mod 4] div 4 == cs[1]:
             cs[0]*4 + ss[0]
+        elif old_crossings[2][(ss[2]+2) mod 4] div 4 == cs[0]:
+            cs[2]*4 + ss[2]
         else:
             old_crossings[2][(ss[2]+2) mod 4]
     )
@@ -299,6 +303,8 @@ proc reidemeister_iii*[T](link: Link[T], triple: array[0..2, (int, int)]): void 
             cs[1]*4 + (ss[1]+1) mod 4
         elif old_crossings[2][(ss[2]+3) mod 4] div 4 == cs[2]:
             cs[0]*4 + (ss[0]+1) mod 4
+        elif old_crossings[2][(ss[2]+3) mod 4] div 4 == cs[1]:
+            cs[2]*4 + (ss[2]+1) mod 4
         else:
             old_crossings[2][(ss[2]+3) mod 4]
     )
@@ -307,6 +313,8 @@ proc reidemeister_iii*[T](link: Link[T], triple: array[0..2, (int, int)]): void 
             cs[2]*4 + ss[2]
         elif old_crossings[0][(ss[0]+2) mod 4] div 4 == cs[2]:
             cs[1]*4 + ss[1]
+        elif old_crossings[0][(ss[0]+2) mod 4] div 4 == cs[1]:
+            cs[0]*4 + ss[0]
         else:
             old_crossings[0][(ss[0]+2) mod 4]
     )
@@ -317,6 +325,8 @@ proc reidemeister_iii*[T](link: Link[T], triple: array[0..2, (int, int)]): void 
             cs[2]*4 + (ss[2]+1) mod 4
         elif old_crossings[0][(ss[0]+3) mod 4] div 4 == cs[0]:
             cs[1]*4 + (ss[1]+1) mod 4
+        elif old_crossings[0][(ss[0]+3) mod 4] div 4 == cs[2]:
+            cs[0]*4 + (ss[0]+1) mod 4
         else:
             old_crossings[0][(ss[0]+3) mod 4]
     )
@@ -325,6 +335,8 @@ proc reidemeister_iii*[T](link: Link[T], triple: array[0..2, (int, int)]): void 
             cs[0]*4 + ss[0]
         elif old_crossings[1][(ss[1]+2) mod 4] div 4 == cs[0]:
             cs[2]*4 + ss[2]
+        elif old_crossings[1][(ss[1]+2) mod 4] div 4 == cs[2]:
+            cs[1]*4 + ss[1]
         else:
             old_crossings[1][(ss[1]+2) mod 4]
     )
