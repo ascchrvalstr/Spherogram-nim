@@ -16,7 +16,7 @@ import cppstl/std_string
 {.compile: "hfk_wrapper.cpp".}
 
 from os import splitPath
-{.passC:"-I" & currentSourcePath().splitPath.head .}
+{.passC:"-I\"" & currentSourcePath().splitPath.head & "\"" .}
 
 type ReturnedHFK* {.importcpp: "ReturnedHFK", header: "hfk_wrapper.hpp".} = object
     success*: bool
