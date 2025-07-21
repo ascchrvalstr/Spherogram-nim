@@ -146,6 +146,8 @@ proc goeritz_matrix*[T](link: Link[T]): (seq[seq[int]], seq[seq[(int, (int, int)
     return (m_remove_r0_c0, G)
 
 proc signature*[T](link: Link[T]): int =
+    if link.crossings.len == 0 and link.unlinked_unknot_components == 1:
+        return 0
     let (m0, G) = goeritz_matrix(link)
     let size = m0.len
     var m = newSeqWith(size, newSeq[float64](size))
@@ -176,6 +178,8 @@ proc colorability_matrix*[T](link: Link[T]): seq[seq[int]] =
     return m
 
 proc determinant*[T](link: Link[T], method0: string = "goeritz"): int =
+    if link.crossings.len == 0 and link.unlinked_unknot_components == 1:
+        return 1
     # "method" is a reserved keyword in Nim, so the parameter has to be renamed to "method0"
     if method0 == "color":
         let M = link.colorability_matrix()
