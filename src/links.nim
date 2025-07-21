@@ -375,6 +375,35 @@ proc split_link_diagram*[T](link: Link[T]): seq[Link[T]] =
         conn_comps.add(newLink(cc_crossings[cc], cc_signs[cc], 0, cc_link_components[cc], &"({link.name}).connected_component({cc})"))
     return conn_comps
 
+proc disjoint_union*[T](link1: Link[T], link2: Link[T]): Link[T] =
+    discard """
+    Given two links, calculates their disjoint union,
+    preserving their crossing signs and the total number of
+    unlinked unknot components.
+
+    Args:
+        link1: the first link
+        link2: the second link
+
+    Returns:
+        A link representing their disjoint union.
+    """
+    # shift the PD code of link2
+    var PD_2 = link2.PD_code()
+    for c in 0 ..< PD2.len:
+        for s in 0 ..< 4:
+            PD_2[c][s] += 2*link1.crossings.len
+    var link = link_from_PD_code(link1.PD_code() & PD_2,
+                                 link1.signs & link2.signs,
+                                 link1.unlinked_unknot_components +
+                                 link2.unlinked_unknot_components)
+    link.link_components = link1.link_components
+    for comp in link2.link_components:
+        link.link_components.add(newLinkComponent(comp.crossing + link1.crossings.len,
+                                                  comp.strand_index,
+                                                  comp.extra_info))
+    return link
+
 proc opposite_strand*[T](link: Link[T], strand: (int, int)): (int, int) =
     let (c, s) = strand
     let opposite = link.crossings[c][s]

@@ -53,6 +53,30 @@ test "split_link_diagram":
     check conn_comps[1].unlinked_unknot_components == 0
     check conn_comps[1].link_components == [newLinkComponent[int](0, 1)]
 
+test "disjoint_union":
+    var knot61 = link_from_PD_code(@[[6, 11, 7, 0], [0, 5, 1, 6], [10, 2, 11, 1], [2, 10, 3, 9], [8, 4, 9, 3], [4, 8, 5, 7]], unlinked_unknot_components = 1)
+    var knot41 = link_from_PD_code(@[[7, 4, 0, 5], [3, 0, 4, 1], [1, 7, 2, 6], [5, 3, 6, 2]], unlinked_unknot_components = 2)
+    var union_61_41 = disjoint_union(knot61, knot41)
+    check (union_61_41.PD_code() ==
+           @[[11, 4, 0, 5],     # 6_1
+             [5, 10, 6, 11],
+             [3, 7, 4, 6],
+             [7, 3, 8, 2],
+             [1, 9, 2, 8],
+             [9, 1, 10, 0],
+             [19, 16, 12, 17],  # 4_1 with
+             [15, 12, 16, 13],  # shifted
+             [13, 19, 14, 18],  # edge labels
+             [17, 15, 18, 14]])
+    check (union_61_41.signs ==
+           @[-1, -1, 1, 1, 1, 1,  # 6_1
+             -1, -1, 1, 1])       # 4_1
+    # test that the numbers of unlinked unknot
+    # components have been correctly added
+    check union_61_41.unlinked_unknot_components == 3
+    check union_61_41.link_components == @[newLinkComponent[int](0, 2),
+                                           newLinkComponent[int](6, 2)]
+
 test "connected_sum":
     let link1 = link_from_PD_code(@[[0, 1, 1, 2], [3, 3, 0, 2]])
     let link2 = link_from_PD_code(@[[0, 0, 1, 1]])
