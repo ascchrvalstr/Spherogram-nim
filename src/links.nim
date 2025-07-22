@@ -77,21 +77,22 @@ proc link_from_PD_code_with_extra_info*[T](pd_code: seq[array[0..3, int]], signs
                 var cur_s = 2
                 while not visited[cur_c][cur_s]:
                     visited[cur_c][cur_s] = true
-                    visited[cur_c][(cur_s+2) mod 4] = true
                     let opposite = crossings[cur_c][cur_s]
+                    let (op_c, op_s) = (opposite div 4, opposite mod 4)
+                    visited[op_c][op_s] = true
                     # opposite should be an incoming strand
-                    if opposite mod 4 == 2:
+                    if op_s == 2:
                         signs_consistent = false
                         break
-                    elif opposite mod 4 in [1, 3]:
-                        let proposed_sign = (if opposite mod 4 == 1: -1 else: 1)
-                        if signs[opposite div 4] == -proposed_sign:
+                    elif op_s in [1, 3]:
+                        let proposed_sign = (if op_s == 1: -1 else: 1)
+                        if signs[op_c] == -proposed_sign:
                             # the signs cannot be made consistent
                             signs_consistent = false
                             break
-                        signs[opposite div 4] = proposed_sign
-                    cur_c = opposite div 4
-                    cur_s = (opposite+2) mod 4
+                        signs[op_c] = proposed_sign
+                    cur_c = op_c
+                    cur_s = (op_s+2) mod 4
                 if not signs_consistent:
                     break
         # every link component must have signs assigned
