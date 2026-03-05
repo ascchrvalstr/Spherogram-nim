@@ -71,6 +71,9 @@ test "signature":
     let knot_52 = link_from_PD_code(@[[4, 0, 5, 9], [0, 6, 1, 5], [8, 2, 9, 1], [2, 8, 3, 7], [6, 4, 7, 3]])
     check knot_52.signature() == -2
 
+    let l8n8_100 = link_from_PD_code(@[[6, 2, 7, 1], [2, 8, 3, 7], [16, 11, 13, 12], [3, 11, 4, 10], [9, 1, 10, 4], [5, 14, 6, 15], [13, 8, 14, 5], [12, 15, 9, 16]])
+    check l8n8_100.signature() == 0
+
 test "colorability_matrix":
     let trefoil = link_from_PD_code(@[[5, 2, 0, 3], [3, 0, 4, 1], [1, 4, 2, 5]])
     check trefoil.colorability_matrix() == @[@[-1, -1, 2], @[2, -1, -1], @[-1, 2, -1]]
