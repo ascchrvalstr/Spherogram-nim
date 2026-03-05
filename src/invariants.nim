@@ -156,9 +156,9 @@ proc signature*[T](link: Link[T]): int =
             m[i][j] = float64(m0[i][j])
     var ans = 0
     for eigenvalue in matrix(m).eig().getRealEigenvalues():
-        if eigenvalue > 0:
+        if eigenvalue > 1e-8:
             ans += 1
-        elif eigenvalue < 0:
+        elif eigenvalue < -1e-8:
             ans -= 1
     for i in 0 ..< G.len:
         for (j, edge_data) in G[i]:
